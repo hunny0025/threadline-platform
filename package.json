@@ -1,0 +1,9 @@
+{
+    "name": "threadline-platform",
+    "version": "1.0.0",
+    "description": "Fashion e-commerce platform",
+    "main": "src/index.js",
+    "keywords": [],
+    "author": "",
+    "license": "MIT"
+}
