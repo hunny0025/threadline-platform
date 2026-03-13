@@ -3,6 +3,11 @@
     "version": "1.0.0",
     "description": "Fashion e-commerce platform",
     "main": "src/index.js",
+    "scripts": {
+        "lint": "eslint src/**/*.js",
+        "test": "jest",
+        "build": "echo 'Building the application...'"
+    },
     "keywords": [],
     "author": "",
     "license": "MIT",
