@@ -6,6 +6,30 @@ This repository contains the backend API, frontend client, and CI/CD setup.
 ## Project Overview
 The goal of Threadline is to build a scalable fashion e-commerce platform that supports product browsing, ordering, and user management.
 
+## Staging Environment (Live)
+
+The staging environment is used for testing the application before production deployment.
+
+Frontend (Vercel)  
+https://threadline-platform.vercel.app
+
+Backend (Railway)  
+https://threadline-platform-production.up.railway.app
+
+Database  
+MongoDB Atlas (Threadline staging database)
+
+Architecture:
+
+Frontend (Vercel) → Backend API (Railway) → MongoDB Atlas
+
+This environment allows the team to test features, APIs, and integrations before deploying to production.
+Architecture:
+
+Frontend (Vercel) → Backend API (Railway) → MongoDB Atlas
+
+Use this environment to test features, APIs, and integrations before merging into production.
+
 ## Repository Structure
 
 ```
