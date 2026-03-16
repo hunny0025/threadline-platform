@@ -1,5 +1,5 @@
 const Product = require('../models/Product');
-const ProductVariant = require('../models/ProductVariant');
+
 const mongoose = require('mongoose');
 
 exports.filterProducts = async (req, res, next) => {
