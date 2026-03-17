@@ -8,6 +8,7 @@
 import { useState, useEffect } from 'react';
 import { Header } from './components/layout/Header';
 import './App.css';
+import { HeroVideoBanner } from './components/home/HeroVideoBanner';
 import { Button, Badge, Input, Tag, Textarea, Chip, Skeleton, Spinner, Modal, Toast } from '@/src/components/ui';
 
 function App() {
@@ -35,19 +36,8 @@ function App() {
       <Header />
 
       <main>
-        {/* Placeholder section to test scrolling */}
-        <section className="h-[80vh] flex flex-col items-center justify-center bg-violet-50 text-center px-4">
-          <h1 className="text-4xl sm:text-5xl font-display font-extrabold text-violet-950 mb-4 tracking-tight">
-            Discover Curated Fashion
-          </h1>
-          <p className="text-lg text-violet-800 max-w-2xl mb-8">
-            Experience the new standard in e-commerce. Built with passion and designed for modern wardrobes.
-          </p>
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm text-sm font-medium text-zinc-600 border border-violet-100">
-            <span className={`w-2 h-2 rounded-full ${healthStatus === 'OK' ? 'bg-success' : 'bg-zinc-400'}`}></span>
-            API Status: {healthStatus || 'Checking...'}
-          </div>
-        </section>
+        {/* Active Hero Video Banner Component */}
+        <HeroVideoBanner />
 
         {/* More placeholder content */}
         <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
