@@ -1,6 +1,8 @@
 const express = require('express');
 const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const passport = require('./config/passport');
 const corsMiddleware = require('./middleware/cors');
 const rateLimiter = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
@@ -17,6 +19,16 @@ app.use(corsMiddleware);
 app.use(express.json());
 app.use(cookieParser());
 app.use(rateLimiter);
+
+// Session for passport
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: false,
+}));
+
+// Passport
+app.use(passport.initialize());
 
 // Swagger docs
 const swaggerDoc = YAML.load(path.join(__dirname, 'docs/swagger.yaml'));
