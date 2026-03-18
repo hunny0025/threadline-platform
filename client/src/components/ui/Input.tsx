@@ -6,7 +6,7 @@ import { cn } from "@/src/lib/utils";
 const inputVariants = cva(
   // Base styles - 8pt grid
   [
-    "flex w-full rounded-md font-display text-sm transition-all duration-300",
+    "flex w-full rounded-lg font-display text-sm transition-all duration-300",
     "placeholder:text-neutral-400",
     "disabled:opacity-40 disabled:cursor-not-allowed disabled:bg-neutral-50",
     "focus:outline-none",
@@ -15,17 +15,17 @@ const inputVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-white border-1 border-neutral-200 text-black",
+          "bg-white rounded-lg border-1 border-neutral-200 text-black",
           "hover:border-neutral-300",
           "focus:border-black focus:ring-2 focus:ring-black/5",
         ].join(" "),
         filled: [
-          "bg-neutral-50 border-1 border-transparent text-black",
+          "bg-neutral-50 rounded-lg border-1 border-transparent text-black",
           "hover:bg-neutral-100",
           "focus:bg-white focus:border-black focus:ring-2 focus:ring-black/5",
         ].join(" "),
         flushed: [
-          "bg-transparent border-b-1 border-neutral-300 text-black rounded-none",
+          "bg-transparent rounded-lg border-b-1 border-neutral-300 text-black rounded-none",
           "hover:border-neutral-400",
           "focus:border-black focus:ring-2 focus:ring-black/5",
         ].join(" "),
@@ -52,8 +52,8 @@ const inputVariants = cva(
 
 export interface InputProps
   extends
-  Omit<InputHTMLAttributes<HTMLInputElement>, "size">,
-  VariantProps<typeof inputVariants> {
+    Omit<InputHTMLAttributes<HTMLInputElement>, "size">,
+    VariantProps<typeof inputVariants> {
   label?: string;
   helperText?: string;
   error?: boolean;
