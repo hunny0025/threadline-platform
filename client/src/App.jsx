@@ -13,6 +13,7 @@ import BannerStrip from "./components/home/BannerStrip";
 import SocialProofStrip from "./components/home/SocialProofStrip";
 import FeaturedCollections from "./components/home/FeaturedCollections";
 import NewArrivals from "./components/home/NewArrivals";
+import LookbookGrid from "./components/home/LookbookGrid";
 import { Button, Modal } from "@/src/components/ui";
 
 function App() {
@@ -28,6 +29,7 @@ function App() {
         <SocialProofStrip />
         <FeaturedCollections />
         <NewArrivals />
+        <LookbookGrid />
       </main>
 
       <Modal
