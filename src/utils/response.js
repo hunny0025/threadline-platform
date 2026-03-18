@@ -16,4 +16,18 @@ const sendError = (res, message = 'Something went wrong', statusCode = 500) => {
   });
 };
 
-module.exports = { sendSuccess, sendError };
+const successResponse = (data, message = 'Success', statusCode = 200) => ({
+  success: true,
+  status: statusCode,
+  message,
+  data,
+});
+
+const errorResponse = (message = 'Something went wrong', statusCode = 500) => ({
+  success: false,
+  status: statusCode,
+  message,
+  data: null,
+});
+
+module.exports = { sendSuccess, sendError, successResponse, errorResponse };
