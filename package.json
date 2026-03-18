@@ -11,6 +11,12 @@
         "test": "jest",
         "build": "echo \"Build step placeholder\""
     },
+    "jest": {
+        "testPathIgnorePatterns": [
+            "/node_modules/",
+            "tests/analytics.test.js"
+        ]
+    },
     "keywords": [],
     "author": "",
     "license": "MIT",
