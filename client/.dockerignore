@@ -1,0 +1,12 @@
+# ============================================================
+# Threadline Frontend - Docker Ignore
+# ============================================================
+
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+dist
+.git
+*.md

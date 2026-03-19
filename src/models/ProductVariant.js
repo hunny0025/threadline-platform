@@ -38,6 +38,6 @@ const productVariantSchema = new mongoose.Schema(
 );
 
 productVariantSchema.index({ product: 1 });
-productVariantSchema.index({ sku: 1 }, { unique: true });
+
 
 module.exports = mongoose.model('ProductVariant', productVariantSchema);

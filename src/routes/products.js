@@ -18,4 +18,7 @@ router.post('/', auth, rbac('admin'), createProduct);
 router.patch('/:id', auth, rbac('admin'), updateProduct);
 router.delete('/:id', auth, rbac('admin'), deleteProduct);
 
+// Variants
+router.use('/:id/variants', require('./variants'));
+
 module.exports = router;
