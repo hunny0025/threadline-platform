@@ -336,7 +336,6 @@ const productData = [
 ];
 
 // ── Variant Generator ─────────────────────────────────────
-const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
 const COLORS = [
   { color: 'black',   colorLabel: 'Black' },
   { color: 'white',   colorLabel: 'White' },
