@@ -7,7 +7,7 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
-import { Home, About, FAQ, Returns } from "./pages";
+import { Home, About, FAQ, Returns, Catalog } from "./pages";
 import { Button, Modal } from "@/src/components/ui";
 import "./App.css";
 
@@ -22,6 +22,8 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/catalog" element={<Catalog />} />
+            <Route path="/shop" element={<Catalog />} />
             <Route path="/about" element={<About />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/returns" element={<Returns />} />
