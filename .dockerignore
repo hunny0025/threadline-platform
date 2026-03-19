@@ -1,0 +1,23 @@
+# ============================================================
+# Threadline Platform - Docker Ignore
+# Prevents these files from being copied into Docker image
+# and keeps image size small and build fast.
+# ============================================================
+
+node_modules
+npm-debug.log
+.env
+.env.*
+!.env.example
+.git
+.gitignore
+docker-compose.yml
+*.md
+coverage
+.nyc_output
+tests
+client
+uploads
+scripts
+.eslintrc.json
+.eslintignore
