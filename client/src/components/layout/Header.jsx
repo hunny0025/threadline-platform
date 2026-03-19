@@ -1,15 +1,81 @@
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Search, X } from "lucide-react";
 import { useScrollDirection } from "../../hooks/useScrollDirection";
+import { SearchBar } from "../ui/SearchBar";
 
 export function Header() {
   const scrollDirection = useScrollDirection();
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+
+  const handleSearch = async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    setIsSearching(true);
+
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 400));
+
+    // Mock search results
+    const mockResults = [
+      {
+        id: '1',
+        title: `${query} - Trending Now`,
+        subtitle: 'Popular items matching your search',
+        thumbnail: 'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&h=100&fit=crop'
+      },
+      {
+        id: '2',
+        title: `${query} - New Arrivals`,
+        subtitle: 'Latest collection items',
+        thumbnail: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=100&h=100&fit=crop'
+      },
+      {
+        id: '3',
+        title: `${query} - Best Sellers`,
+        subtitle: 'Most popular items',
+        thumbnail: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop'
+      },
+      {
+        id: '4',
+        title: `${query} - Sale Items`,
+        subtitle: 'Discounted prices',
+        thumbnail: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&h=100&fit=crop'
+      }
+    ];
+
+    setSearchResults(mockResults);
+    setIsSearching(false);
+  };
+
+  const handleResultSelect = (result) => {
+    console.log('Header search selected:', result);
+    setIsSearchOpen(false);
+    // Add navigation logic here
+  };
+
+  const openSearch = () => {
+    setIsSearchOpen(true);
+  };
+
+  const closeSearch = () => {
+    setIsSearchOpen(false);
+    setSearchResults([]);
+  };
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 transition-all duration-300 ${
-        scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
-      }`}
-    >
+    <>
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-200 transition-all duration-300 ${
+          scrollDirection === "down" ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
@@ -44,6 +110,15 @@ export function Header() {
 
           {/* Actions */}
           <div className="flex items-center space-x-4">
+            {/* Search Button */}
+            <button
+              onClick={openSearch}
+              className="relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
+            >
+              <span className="sr-only">Search</span>
+              <Search className="h-5 w-5" />
+            </button>
+
             <button className="relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none">
               <span className="sr-only">Cart</span>
               <svg
@@ -69,5 +144,78 @@ export function Header() {
         </div>
       </div>
     </header>
+
+    {/* Search Modal */}
+    <AnimatePresence>
+      {isSearchOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            className="fixed inset-0 z-60 bg-black/50 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={closeSearch}
+          />
+
+          {/* Search Modal */}
+          <motion.div
+            className="fixed top-16 left-0 right-0 z-60 bg-white border-b border-zinc-200 shadow-xl"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3, ease: [0.43, 0.13, 0.23, 0.96] }}
+          >
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+              {/* Header */}
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-lg font-display font-semibold text-zinc-900">
+                  Search Products
+                </h2>
+                <button
+                  onClick={closeSearch}
+                  className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors rounded-lg hover:bg-zinc-100"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Search Bar */}
+              <div className="mb-4">
+                <SearchBar
+                  placeholder="Search for products, brands, categories..."
+                  size="lg"
+                  results={searchResults}
+                  isLoading={isSearching}
+                  onSearch={handleSearch}
+                  onSelect={handleResultSelect}
+                  showHistory={true}
+                  className="shadow-sm border-zinc-300"
+                  autoFocus
+                />
+              </div>
+
+              {/* Quick Actions */}
+              <div className="border-t border-zinc-100 pt-4">
+                <p className="text-sm text-zinc-500 mb-3">Quick searches:</p>
+                <div className="flex flex-wrap gap-2">
+                  {['New Arrivals', 'Sale Items', 'Bestsellers', 'Accessories', 'Dresses', 'Shoes'].map((term) => (
+                    <button
+                      key={term}
+                      onClick={() => handleSearch(term)}
+                      className="px-3 py-1.5 text-sm bg-zinc-100 text-zinc-700 rounded-full hover:bg-zinc-200 transition-colors"
+                    >
+                      {term}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  </>
   );
 }

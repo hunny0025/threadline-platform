@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { Button } from '@/src/components/ui';
+import { motion } from "framer-motion";
+import { Button } from "@/src/components/ui";
 
 export function HeroVideoBanner() {
   // Custom cubic-bezier easing for a smooth, premium entrance
@@ -45,18 +45,18 @@ export function HeroVideoBanner() {
           poster="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
         >
           {/* High-bitrate optimal source */}
-          <source 
-            src="https://videos.pexels.com/video-files/3205917/3205917-uhd_2560_1440_25fps.mp4" 
-            type="video/mp4" 
+          <source
+            src="https://videos.pexels.com/video-files/3205917/3205917-uhd_2560_1440_25fps.mp4"
+            type="video/mp4"
           />
           {/* Fallback source in case first fails */}
-          <source 
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" 
-            type="video/mp4" 
+          <source
+            src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+            type="video/mp4"
           />
           Your browser does not support the video tag.
         </video>
-        
+
         {/* Overlay gradient for text readability and premium look */}
         <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/90 via-zinc-900/40 to-black/20 mix-blend-multiply" />
       </div>
@@ -70,14 +70,17 @@ export function HeroVideoBanner() {
           className="max-w-3xl"
         >
           {/* Pill Badge Entrance */}
-          <motion.div variants={itemVariants} className="mb-6 flex justify-center sm:justify-start">
+          <motion.div
+            variants={itemVariants}
+            className="mb-6 flex justify-center sm:justify-start"
+          >
             <span className="inline-block py-1.5 px-4 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs sm:text-sm font-medium tracking-widest uppercase">
               Spring/Summer '26 Collection
             </span>
           </motion.div>
-          
+
           {/* Main Title with Gradient */}
-          <motion.h1 
+          <motion.h1
             variants={itemVariants}
             className="text-5xl sm:text-7xl lg:text-8xl font-display font-extrabold text-white leading-[1.1] mb-6 tracking-tight"
           >
@@ -88,22 +91,30 @@ export function HeroVideoBanner() {
           </motion.h1>
 
           {/* Subtitle */}
-          <motion.p 
+          <motion.p
             variants={itemVariants}
             className="text-lg sm:text-xl md:text-2xl text-zinc-300 mb-10 max-w-2xl leading-relaxed font-body font-light"
           >
-            Experience the new standard in curated fashion. Built with passion and designed for modern wardrobes.
+            Experience the new standard in curated fashion. Built with passion
+            and designed for modern wardrobes.
           </motion.p>
 
           {/* Call to Actions */}
-          <motion.div 
+          <motion.div
             variants={itemVariants}
             className="flex flex-col sm:flex-row gap-4 justify-center sm:justify-start"
           >
-            <Button size="lg" className="bg-white text-zinc-950 hover:bg-zinc-100 hover:scale-105 transition-transform duration-300 border-transparent font-medium py-6 px-8 text-base rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)]">
+            <Button
+              size="lg"
+              className="bg-white text-zinc-950 hover:bg-zinc-100 hover:scale-105 transition-transform duration-300 border-transparent font-medium py-6 px-8 text-base rounded-full shadow-[0_0_30px_rgba(255,255,255,0.2)]"
+            >
               Shop the Collection
             </Button>
-            <Button size="lg" variant="outline" className="text-white border-white/30 hover:bg-white/10 hover:border-white/50 backdrop-blur-sm transition-all duration-300 font-medium py-6 px-8 text-base rounded-full">
+            <Button
+              size="lg"
+              variant="outline"
+              className="text-white border-white/30 hover:bg-white/10 hover:border-white/50 backdrop-blur-sm transition-all duration-300 font-medium py-6 px-8 text-base rounded-full"
+            >
               Explore Lookbook
             </Button>
           </motion.div>
