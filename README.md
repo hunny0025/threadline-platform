@@ -1,147 +1,119 @@
-# Threadline Platform
+# 🧵 Threadline Platform
+**Professional Fashion E-Commerce Staging & Dev Environment**
 
-Threadline is a fashion e-commerce platform currently under development.  
-This repository contains the backend API, frontend client, and CI/CD setup.
+Threadline is a full-stack fashion e-commerce platform. This repository contains a production-grade backend API, a modern React frontend, and a fully automated DevOps pipeline.
 
-## Project Overview
-The goal of Threadline is to build a scalable fashion e-commerce platform that supports product browsing, ordering, and user management.
+---
 
-## Staging Environment (Live)
+## 🚀 Live Staging Environment
+Use these links to check the latest stable deployment:
 
-The staging environment is used for testing the application before production deployment.
+| Service | Environment | URL |
+| :--- | :--- | :--- |
+| **Frontend** | Vercel | [threadline-platform.vercel.app](https://threadline-platform.vercel.app) |
+| **Backend** | Railway | [threadline-platform-production.up.railway.app](https://threadline-platform-production.up.railway.app/health) |
+| **API Docs** | Swagger | [/api/docs](https://threadline-platform-production.up.railway.app/api/docs) |
 
-Frontend (Vercel)  
-https://threadline-platform.vercel.app
+---
 
-Backend (Railway)  
-https://threadline-platform-production.up.railway.app
+## ⚡ Quick Start (Local Development)
 
-Database  
-MongoDB Atlas (Threadline staging database)
+### Option A: The "Senior Dev" Way (Docker) - RECOMMENDED
+If you have Docker installed, you can start the **entire stack** (Backend + Frontend + MongoDB + Redis) with one command. No local database installation needed.
 
-Architecture:
-
-Frontend (Vercel) → Backend API (Railway) → MongoDB Atlas
-
-This environment allows the team to test features, APIs, and integrations before deploying to production.
-Architecture:
-
-Frontend (Vercel) → Backend API (Railway) → MongoDB Atlas
-
-Use this environment to test features, APIs, and integrations before merging into production.
-
-## Repository Structure
-
-```
-threadline-platform/
-├── .github/workflows/     # GitHub Actions CI/CD
-├── client/                # Frontend (React + Vite) → Deploy on Vercel
-│   ├── src/
-│   │   ├── App.jsx        # Main React component
-│   │   ├── main.jsx       # React entry point
-│   │   ├── App.css        # App styles
-│   │   └── index.css      # Global styles & CSS variables
-│   ├── index.html         # HTML entry
-│   ├── vite.config.js     # Vite config with API proxy
-│   ├── package.json
-│   └── .env.example       # Frontend env vars template
-├── src/                   # Backend (Express.js) → Deploy on Railway
-│   ├── config/            # Environment config
-│   ├── db/                # Database connection (Mongoose)
-│   ├── docs/              # Swagger API docs
-│   ├── middleware/         # Express middleware
-│   ├── models/            # Mongoose models
-│   ├── routes/            # API routes
-│   └── scripts/           # Utility scripts (seed, etc.)
-├── tests/                 # Unit tests
-├── server.js              # Backend entry point
-├── package.json           # Backend dependencies
-└── .env.example           # Backend env vars template
-```
-
-## Getting Started
-
-### Prerequisites
-- Node.js (v18+)
-- MongoDB (local or Atlas)
-
-### Backend Setup
 ```bash
+# 1. Clone and enter
 git clone https://github.com/hunny0025/threadline-platform.git
 cd threadline-platform
-cp .env.example .env         # Fill in your values
+
+# 2. Setup Env
+cp .env.example .env
+cp client/.env.example client/.env
+
+# 3. Start everything
+docker-compose up
+```
+*Frontend runs on `http://localhost:5173` | Backend on `http://localhost:3000`*
+
+---
+
+### Option B: The Manual Way
+Requires Node.js 18+ and a local MongoDB instance.
+
+**1. Backend Setup**
+```bash
 npm install
-npm run dev                  # Starts backend on http://localhost:3000
+npm run dev
 ```
 
-### Frontend Setup
+**2. Frontend Setup**
 ```bash
 cd client
-cp .env.example .env         # Set VITE_API_URL
 npm install
-npm run dev                  # Starts frontend on http://localhost:5173
+npm run dev
 ```
 
-## Staging Deployment
+---
 
-### Backend → Railway
-1. Connect this repo to [Railway](https://railway.app)
-2. Set the **root directory** to `/` (project root)
-3. Set environment variables in Railway dashboard:
-   - `PORT` — Railway assigns automatically
-   - `NODE_ENV` = `staging`
-   - `MONGODB_URI` — Your MongoDB Atlas connection string
-   - `JWT_SECRET` — A strong random string
-   - `ALLOWED_ORIGINS` — Your Vercel frontend URL
-4. Railway will auto-detect `npm start` and deploy
+## 🌱 Seeding Data
+To populate your database with 30+ realistic fashion products, categories, and variants:
+```bash
+npm run seed
+```
+*⚠️ WARNING: This will clear your existing local database collections before seeding.*
 
-### Frontend → Vercel
-1. Connect this repo to [Vercel](https://vercel.com)
-2. Set the **root directory** to `client`
-3. Framework preset: **Vite**
-4. Set environment variables in Vercel dashboard:
-   - `VITE_API_URL` — Your Railway backend URL (e.g., `https://threadline-api.up.railway.app`)
-5. Vercel will auto-build and deploy
+---
 
-### Staging MongoDB
-1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas)
-2. Whitelist `0.0.0.0/0` for Railway access
-3. Create a database user and get the connection string
-4. Add the connection string as `MONGODB_URI` in Railway
+## 🛠️ Team Onboarding: Env Variables
+Every intern/team member **must** set these in their local `.env` file from the `.env.example` template.
 
-## CI/CD Pipeline
-
-This repository uses **GitHub Actions** to automatically run checks on every push and pull request.
-
-The pipeline performs the following steps:
-- Install project dependencies
-- Run ESLint for code quality
-- Execute unit tests
-- Build the application
-
-## Branch Protection
-
-To maintain code quality, the `main` branch should be protected by requiring:
-
-- Pull requests before merging
-- Successful CI checks
-- Code review approval
-
-## Environment Variables
-
-### Backend (.env.example)
+### 🔑 Critical Identity Variables
 | Variable | Description |
-|----------|-------------|
-| `PORT` | Server port (default: 3000) |
-| `NODE_ENV` | Environment: development / staging / production |
-| `MONGODB_URI` | MongoDB connection string |
-| `JWT_SECRET` | Secret key for JWT tokens |
-| `ALLOWED_ORIGINS` | Comma-separated CORS origins |
+| :--- | :--- |
+| `JWT_SECRET` | Secret for short-lived access tokens |
+| `JWT_REFRESH_SECRET` | **MANDATORY** for login & refresh sessions |
+| `SESSION_SECRET` | Used for Passport.js / Google OAuth sessions |
 
-### Frontend (client/.env.example)
-| Variable | Description |
-|----------|-------------|
-| `VITE_API_URL` | Backend API URL |
+### 🌐 Social Auth (Google)
+| Variable | Usage |
+| :--- | :--- |
+| `GOOGLE_CLIENT_ID` | From Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
+| `GOOGLE_CALLBACK_URL` | `http://localhost:3000/api/v1/auth/google/callback` |
 
-## License
-MIT
+---
+
+## 🛡️ Reliability & DevOps
+
+### ☁️ CI/CD Pipeline (GitHub Actions)
+Every Push/PR triggers an automated check:
+1. **Linting**: Checks code quality via ESLint.
+2. **Testing**: Runs unit tests via Jest.
+3. **Build**: Ensures the project builds without errors.
+*Status: Check the **Actions** tab for the green ✅.*
+
+### 📦 Database Backups (S3)
+We use a production-grade backup strategy located in `scripts/backup.sh`.
+- **How it works**: Dumps MongoDB → Compresses → Uploads to AWS S3.
+- **Schedule**: Intended for daily cron jobs in production.
+
+---
+
+## 📂 Project Structure
+```text
+threadline-platform/
+├── client/                # React + Vite (Vercel)
+├── src/                   # Node.js API (Railway)
+│   ├── config/            # Passport & Env config
+│   ├── controllers/       # Business logic
+│   ├── models/            # Mongoose Schemas (User, Product, etc.)
+│   ├── routes/            # API Endpoints
+│   └── scripts/           # Seed & Backup utilities
+├── docker-compose.yml     # Local dev orchestration
+└── .github/workflows/     # CI Pipeline
+```
+
+---
+
+## 📜 License
+Internal Internship Project - Team Threadline.
