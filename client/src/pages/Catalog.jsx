@@ -13,7 +13,10 @@ const fetchProducts = async (page, numItems = 12) => {
         title: `Threadline Product ${page}-${i + 1}`,
         price: (Math.random() * 100 + 20).toFixed(2),
         image: `https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80`,
-        isNew: i % 4 === 0
+        secondaryImage: i % 2 !== 0 ? `https://images.unsplash.com/photo-1515347619362-e6fd0289eb13?w=800&q=80` : null,
+        isNew: i % 4 === 0,
+        lowStock: i % 5 === 0,
+        sizes: i % 3 !== 0 ? ['XS', 'S', 'M', 'L', 'XL'] : []
       }));
       resolve(items);
     }, 1500); // 1.5s delay to show loading skeletons
