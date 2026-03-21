@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { ProductGrid } from "../components/catalog/ProductGrid";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { ProductSkeleton } from "../components/catalog/ProductSkeleton";
+import { QuickLookPanel } from "../components/catalog/QuickLookPanel";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 
 const FILTER_OPTIONS = {
@@ -75,9 +76,17 @@ const areFiltersEqual = (a, b) => {
 const getProductAttributes = (page, index) => {
   const seed = (page - 1) * 12 + index;
   const sizes = FILTER_OPTIONS.size.filter((_, i) => (seed + i) % 2 === 0);
+  // Pick 2-3 colors for this product
+  const colorStart = seed % FILTER_OPTIONS.color.length;
+  const colors = [
+    FILTER_OPTIONS.color[colorStart],
+    FILTER_OPTIONS.color[(colorStart + 1) % FILTER_OPTIONS.color.length],
+    ...(seed % 3 === 0 ? [FILTER_OPTIONS.color[(colorStart + 2) % FILTER_OPTIONS.color.length]] : []),
+  ];
 
   return {
     color: FILTER_OPTIONS.color[seed % FILTER_OPTIONS.color.length],
+    colors,
     fabric: FILTER_OPTIONS.fabric[seed % FILTER_OPTIONS.fabric.length],
     fit: FILTER_OPTIONS.fit[seed % FILTER_OPTIONS.fit.length],
     occasion: FILTER_OPTIONS.occasion[seed % FILTER_OPTIONS.occasion.length],
@@ -143,6 +152,7 @@ function CatalogGridContent() {
       return acc;
     }, {}),
   );
+  const [quickLookProduct, setQuickLookProduct] = useState(null);
 
   useEffect(() => {
     const parsedFilters = parseFiltersFromSearchParams(searchParams);
@@ -296,7 +306,7 @@ function CatalogGridContent() {
 
         <ProductGrid>
           {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} />
+            <ProductCard key={product.id} product={product} onQuickLook={setQuickLookProduct} />
           ))}
 
           {loading &&
@@ -323,6 +333,13 @@ function CatalogGridContent() {
               : "You have reached the end."}
         </div>
       </div>
+
+      {/* Quick Look Panel */}
+      <QuickLookPanel
+        product={quickLookProduct}
+        isOpen={!!quickLookProduct}
+        onClose={() => setQuickLookProduct(null)}
+      />
     </div>
   );
 }

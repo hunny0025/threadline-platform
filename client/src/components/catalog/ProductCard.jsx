@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Heart } from 'lucide-react';
+import { Heart, Eye } from 'lucide-react';
 
 /**
  * Presentation component for a single product.
  */
-export function ProductCard({ product }) {
+export function ProductCard({ product, onQuickLook }) {
   const [isWishlisted, setIsWishlisted] = useState(false);
 
   if (!product) return null;
@@ -80,16 +80,19 @@ export function ProductCard({ product }) {
                ))}
             </div>
           )}
-          <button 
-            className="w-full bg-white text-zinc-900 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded shadow hover:bg-zinc-100 transition-colors"
-            onClick={(e) => { 
-              e.preventDefault(); 
-              e.stopPropagation(); 
-              console.log(`Added ${product.title} to cart`);
-            }}
-          >
-            Add to Cart
-          </button>
+          {onQuickLook && (
+            <button 
+              className="w-full bg-white/95 backdrop-blur text-zinc-900 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold rounded shadow hover:bg-zinc-100 transition-colors flex items-center justify-center gap-1.5"
+              onClick={(e) => { 
+                e.preventDefault(); 
+                e.stopPropagation(); 
+                onQuickLook(product);
+              }}
+            >
+              <Eye size={15} />
+              Quick Look
+            </button>
+          )}
         </div>
       </div>
       <div>
