@@ -4,12 +4,36 @@
 // ============================================================
 
 import { useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
 import { Home, Landing, About, FAQ, Returns, Catalog } from "./pages";
-import { Button, Modal } from "@/src/components/ui";
+import {
+  Button,
+  Modal,
+  RouteLoadingBar,
+  PageTransition,
+} from "@/src/components/ui";
 import "./App.css";
+
+// Animated routes component that uses location for AnimatePresence
+function AnimatedRoutes() {
+  const location = useLocation();
+
+  return (
+    <PageTransition preset="slideUp" duration={0.4}>
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<Home />} />
+        <Route path="/catalog" element={<Catalog />} />
+        <Route path="/shop" element={<Catalog />} />
+        <Route path="/landing" element={<Landing />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/returns" element={<Returns />} />
+      </Routes>
+    </PageTransition>
+  );
+}
 
 function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,18 +41,11 @@ function App() {
   return (
     <BrowserRouter>
       <div className="app min-h-screen bg-white font-body text-zinc-900 pt-16 flex flex-col">
+        <RouteLoadingBar variant="primary" size="sm" showShimmer />
         <Header />
 
         <main className="flex-1">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/catalog" element={<Catalog />} />
-            <Route path="/shop" element={<Catalog />} />
-            <Route path="/landing" element={<Landing />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/returns" element={<Returns />} />
-          </Routes>
+          <AnimatedRoutes />
         </main>
 
         <Footer />
