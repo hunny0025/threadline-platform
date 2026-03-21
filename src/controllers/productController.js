@@ -72,23 +72,96 @@ exports.deleteProduct = async (req, res) => {
 };
 
 // POST /products/filter
+// POST /products/filter
 exports.filterProducts = async (req, res, next) => {
   try {
-    const { category, minPrice, maxPrice, fitType, fabricWeight, gender, page = 1, limit = 20 } = req.body;
-    const filter = { isActive: true };
-    if (category) filter.category = category;
-    if (fitType) filter.fitType = fitType;
-    if (fabricWeight) filter.fabricWeight = fabricWeight;
-    if (gender) filter.gender = gender;
+    const {
+      category,
+      minPrice,
+      maxPrice,
+      fitType,
+      fabricWeight,
+      gender,
+      occasion,
+      size,
+      color,
+      page = 1,
+      limit = 20,
+    } = req.body;
+
+    const matchStage = { isActive: true };
+    if (category) matchStage.category = new require('mongoose').Types.ObjectId(category);
+    if (fitType) matchStage.fitType = fitType;
+    if (fabricWeight) matchStage.fabricWeight = fabricWeight;
+    if (gender) matchStage.gender = gender;
+    if (occasion) matchStage.occasion = occasion;
     if (minPrice || maxPrice) {
-      filter.basePrice = {};
-      if (minPrice) filter.basePrice.$gte = minPrice;
-      if (maxPrice) filter.basePrice.$lte = maxPrice;
+      matchStage.basePrice = {};
+      if (minPrice) matchStage.basePrice.$gte = Number(minPrice);
+      if (maxPrice) matchStage.basePrice.$lte = Number(maxPrice);
     }
-    const total = await Product.countDocuments(filter);
-    const products = await Product.find(filter)
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+
+    const pipeline = [
+      { $match: matchStage },
+      {
+        $lookup: {
+          from: 'productvariants',
+          localField: '_id',
+          foreignField: 'product',
+          as: 'variants',
+        },
+      },
+    ];
+
+    // Filter by size or color if provided
+    if (size || color) {
+      const variantMatch = {};
+      if (size) variantMatch['variants.size'] = size;
+      if (color) variantMatch['variants.color'] = color;
+      pipeline.push({ $match: variantMatch });
+    }
+
+    // Count total before pagination
+    const countPipeline = [...pipeline, { $count: 'total' }];
+    const countResult = await require('../models/Product').aggregate(countPipeline);
+    const total = countResult[0]?.total || 0;
+
+    // Add pagination and projection
+    pipeline.push(
+      { $sort: { createdAt: -1 } },
+      { $skip: (Number(page) - 1) * Number(limit) },
+      { $limit: Number(limit) },
+      {
+        $project: {
+          name: 1,
+          slug: 1,
+          basePrice: 1,
+          images: 1,
+          fitType: 1,
+          fabricWeight: 1,
+          gender: 1,
+          occasion: 1,
+          category: 1,
+          variants: {
+            $map: {
+              input: '$variants',
+              as: 'v',
+              in: {
+                size: '$$v.size',
+                color: '$$v.color',
+                stock: '$$v.stock',
+                price: '$$v.price',
+                inStock: { $gt: ['$$v.stock', 0] },
+              },
+            },
+          },
+        },
+      }
+    );
+
+    const products = await require('../models/Product').aggregate(pipeline);
+
+    const { paginate } = require('../utils/pagination');
     sendSuccess(res, paginate(products, total, page, limit), 'Products filtered successfully');
   } catch (err) {
     next(err);

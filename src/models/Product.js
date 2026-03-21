@@ -48,6 +48,11 @@ const productSchema = new mongoose.Schema(
       enum: ['men', 'women', 'unisex'],
       default: 'unisex',
     },
+    occasion: {
+      type: String,
+      enum: ['casual', 'formal', 'party', 'sports', 'ethnic'],
+      default: 'casual',
+    },
     isActive: {
       type: Boolean,
       default: true,
@@ -58,6 +63,7 @@ const productSchema = new mongoose.Schema(
 
 // Compound index for filtering
 productSchema.index({ category: 1, isActive: 1, basePrice: 1 });
+productSchema.index({ fitType: 1, fabricWeight: 1, gender: 1, occasion: 1, isActive: 1 });
 
 // Text index for search
 productSchema.index(
