@@ -39,6 +39,9 @@ const register = async (req, res) => {
 const login = async (req, res) => {
   try {
     const { email, password } = req.body;
+    if (!email || !password) {
+      return sendError(res, 'Email and password are required', 400);
+    }
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return sendError(res, 'Invalid email or password', 401);
