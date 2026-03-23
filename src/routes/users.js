@@ -4,15 +4,10 @@ const auth = require('../middleware/auth');
 const upload = require('../middleware/upload');
 const { getProfile, updateProfile } = require('../controllers/userController');
 
-router.post('/register', (req, res) => {
-  res.json({ message: 'User registered' });
-});
-
-router.post('/login', (req, res) => {
-  res.json({ message: 'User logged in' });
-});
-
+// GET /users/:id/profile
 router.get('/:id/profile', auth, getProfile);
+
+// PATCH /users/:id/profile
 router.patch('/:id/profile', auth, upload.single('avatar'), updateProfile);
 
 module.exports = router;

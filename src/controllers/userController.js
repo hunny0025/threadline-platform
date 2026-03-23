@@ -1,38 +1,42 @@
 const User = require('../models/User');
+const { sendSuccess, sendError } = require('../utils/response');
 
-exports.getProfile = async (req, res, next) => {
+// GET /users/:id/profile
+exports.getProfile = async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
-      .select("name email phone avatar createdAt");
-    if (!user) {
-      return res.status(404).json({ error: "User not found" });
-    }
-    res.json(user);
+      .select('name email phone avatar createdAt');
+    if (!user) return sendError(res, 'User not found', 404);
+    sendSuccess(res, user, 'Profile fetched successfully');
   } catch (err) {
-    next(err);
+    sendError(res, err.message, 500);
   }
 };
 
-exports.updateProfile = async (req, res, next) => {
+// PATCH /users/:id/profile
+exports.updateProfile = async (req, res) => {
   try {
     const { name, phone } = req.body;
     if (name && name.length < 2) {
-      return res.status(400).json({ error: "Name too short" });
+      return sendError(res, 'Name must be at least 2 characters', 400);
     }
     if (phone && !/^[0-9]{10}$/.test(phone)) {
-      return res.status(400).json({ error: "Invalid phone number" });
+      return sendError(res, 'Invalid phone number', 400);
     }
     const updates = {};
     if (name) updates.name = name;
     if (phone) updates.phone = phone;
     if (req.file) updates.avatar = req.file.path;
+
     const user = await User.findByIdAndUpdate(
       req.params.id,
       updates,
       { new: true, runValidators: true }
-    );
-    res.json(user);
+    ).select('name email phone avatar');
+
+    if (!user) return sendError(res, 'User not found', 404);
+    sendSuccess(res, user, 'Profile updated successfully');
   } catch (err) {
-    next(err);
+    sendError(res, err.message, 500);
   }
 };
