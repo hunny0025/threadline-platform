@@ -7,7 +7,7 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
-import { Home, Landing, About, FAQ, Returns, Catalog } from "./pages";
+import { Home, Landing, About, FAQ, Returns, Catalog, ProductDetail } from "./pages";
 import {
   Button,
   Modal,
@@ -24,6 +24,7 @@ function AnimatedRoutes() {
     <PageTransition preset="slideUp" duration={0.4}>
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Home />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/catalog" element={<Catalog />} />
         <Route path="/shop" element={<Catalog />} />
         <Route path="/landing" element={<Landing />} />
