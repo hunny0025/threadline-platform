@@ -161,7 +161,7 @@ export function Landing() {
             {/* CTA Buttons */}
             <motion.div
               variants={itemVariants}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
               <Button size="lg" className="bg-violet-600 hover:bg-violet-700">
                 Browse All Categories

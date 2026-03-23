@@ -28,6 +28,15 @@ export type { SkeletonProps } from "./Skeleton";
 export { Spinner, spinnerVariants } from "./Spinner";
 export type { SpinnerProps } from "./Spinner";
 
+export { AuthModal, GoogleOAuthButton } from "./AuthModal";
+export type {
+  AuthModalProps,
+  AuthMode,
+  LoginFormData,
+  SignupFormData,
+  FormErrors,
+} from "./AuthModal";
+
 export { RouteLoadingBar, routeLoadingBarVariants } from "./RouteLoadingBar";
 export type { RouteLoadingBarProps } from "./RouteLoadingBar";
 
