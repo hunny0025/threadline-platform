@@ -1,56 +1,61 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 
+// 1. Define Address Schema
+const addressSchema = new mongoose.Schema({
+  street: { type: String, required: true, trim: true },
+  city: { type: String, required: true, trim: true },
+  state: { type: String, required: true, trim: true },
+  zipCode: { type: String, required: true, trim: true },
+  country: { type: String, default: 'India', trim: true },
+  isDefault: { type: Boolean, default: false }
+});
+
 const userSchema = new mongoose.Schema(
-{
-  name: {
-    type: String,
-    required: true,
-    trim: true,
-    minlength: 2,
-    maxlength: 60
+  {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 2,
+      maxlength: 60
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+      index: true
+    },
+    password: {
+      type: String,
+      required: true,
+      minlength: 6
+    },
+    phone: {
+      type: String,
+      trim: true
+    },
+    avatar: {
+      type: String,
+      default: null
+    },
+    role: {
+      type: String,
+      enum: ['user','admin'],
+      default: 'user'
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    // 2. Add the addresses array here
+    addresses: [addressSchema]
   },
-
-  email: {
-    type: String,
-    required: true,
-    unique: true,
-    lowercase: true,
-    trim: true,
-    index: true
-  },
-
-  password: {
-    type: String,
-    required: true,
-    minlength: 6
-  },
-
-  phone: {
-    type: String,
-    trim: true
-  },
-
-  avatar: {
-    type: String,
-    default: null
-  },
-
-  role: {
-    type: String,
-    enum: ['user','admin'],
-    default: 'user'
-  },
-
-  isActive: {
-    type: Boolean,
-    default: true
+  {
+    timestamps: true
   }
-
-},
-{
-  timestamps: true
-}
 );
 
 userSchema.pre('save', async function() {
@@ -60,9 +65,7 @@ userSchema.pre('save', async function() {
 });
 
 userSchema.methods.comparePassword = function(password){
-
   return bcrypt.compare(password, this.password);
-
 };
 
 module.exports = mongoose.model('User', userSchema);

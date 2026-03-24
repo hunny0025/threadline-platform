@@ -40,3 +40,85 @@ exports.updateProfile = async (req, res) => {
     sendError(res, err.message, 500);
   }
 };
+
+// GET /users/:id/addresses
+exports.getAddresses = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id).select('addresses');
+    if (!user) return sendError(res, 'User not found', 404);
+    
+    sendSuccess(res, user.addresses, 'Addresses fetched successfully');
+  } catch (err) {
+    sendError(res, err.message, 500);
+  }
+};
+
+// POST /users/:id/addresses
+exports.addAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return sendError(res, 'User not found', 404);
+
+    // If it's their first address, make it the default automatically
+    const isFirstAddress = user.addresses.length === 0;
+    const newAddress = { ...req.body, isDefault: isFirstAddress };
+
+    user.addresses.push(newAddress);
+    await user.save();
+    
+    sendSuccess(res, user.addresses, 'Address added successfully', 201);
+  } catch (err) {
+    sendError(res, err.message, 500);
+  }
+};
+
+// PATCH /users/:id/addresses/:addressId/default
+exports.setDefaultAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return sendError(res, 'User not found', 404);
+
+    let addressFound = false;
+    
+    // Loop through and set the matching one to true, all others to false
+    user.addresses.forEach(addr => {
+      if (addr._id.toString() === req.params.addressId) {
+        addr.isDefault = true;
+        addressFound = true;
+      } else {
+        addr.isDefault = false;
+      }
+    });
+
+    if (!addressFound) return sendError(res, 'Address not found', 404);
+
+    await user.save();
+    sendSuccess(res, user.addresses, 'Default address updated successfully');
+  } catch (err) {
+    sendError(res, err.message, 500);
+  }
+};
+
+// DELETE /users/:id/addresses/:addressId
+exports.deleteAddress = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) return sendError(res, 'User not found', 404);
+
+    const addressToDelete = user.addresses.id(req.params.addressId);
+    if (!addressToDelete) return sendError(res, 'Address not found', 404);
+
+    // Remove the address
+    user.addresses.pull(req.params.addressId);
+
+    // If they deleted their default address, make the first remaining one the new default
+    if (addressToDelete.isDefault && user.addresses.length > 0) {
+      user.addresses[0].isDefault = true;
+    }
+
+    await user.save();
+    sendSuccess(res, user.addresses, 'Address deleted successfully');
+  } catch (err) {
+    sendError(res, err.message, 500);
+  }
+};
