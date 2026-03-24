@@ -5,6 +5,7 @@ import { ProductCard } from "../components/catalog/ProductCard";
 import { ProductSkeleton } from "../components/catalog/ProductSkeleton";
 import { QuickLookPanel } from "../components/catalog/QuickLookPanel";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
+import { Breadcrumb } from "../components/ui/Breadcrumb";
 
 const FILTER_OPTIONS = {
   size: ["XS", "S", "M", "L", "XL"],
@@ -13,6 +14,14 @@ const FILTER_OPTIONS = {
   fit: ["Slim", "Regular", "Relaxed", "Oversized"],
   occasion: ["Everyday", "Work", "Weekend", "Evening", "Travel"],
 };
+
+const CATEGORY_OPTIONS = [
+  { slug: "tops", label: "Tops" },
+  { slug: "bottoms", label: "Bottoms" },
+  { slug: "dresses", label: "Dresses" },
+  { slug: "outerwear", label: "Outerwear" },
+  { slug: "accessories", label: "Accessories" },
+];
 
 const FILTER_TITLES = {
   size: "Size",
@@ -35,8 +44,12 @@ const normalizeFilterValues = (key, values = []) => {
   return [...new Set(values.filter((value) => allowed.has(value)))];
 };
 
-const filtersToSearchParams = (filters) => {
+const filtersToSearchParams = (filters, category) => {
   const params = new URLSearchParams();
+
+  if (category) {
+    params.set("category", category);
+  }
 
   FILTER_KEYS.forEach((key) => {
     filters[key].forEach((value) => {
@@ -81,7 +94,9 @@ const getProductAttributes = (page, index) => {
   const colors = [
     FILTER_OPTIONS.color[colorStart],
     FILTER_OPTIONS.color[(colorStart + 1) % FILTER_OPTIONS.color.length],
-    ...(seed % 3 === 0 ? [FILTER_OPTIONS.color[(colorStart + 2) % FILTER_OPTIONS.color.length]] : []),
+    ...(seed % 3 === 0
+      ? [FILTER_OPTIONS.color[(colorStart + 2) % FILTER_OPTIONS.color.length]]
+      : []),
   ];
 
   return {
@@ -146,6 +161,9 @@ function CatalogGridContent() {
   const [selectedFilters, setSelectedFilters] = useState(() =>
     parseFiltersFromSearchParams(searchParams),
   );
+  const [activeCategory, setActiveCategory] = useState(
+    () => searchParams.get("category") || null,
+  );
   const [openSections, setOpenSections] = useState(() =>
     FILTER_KEYS.reduce((acc, key) => {
       acc[key] = true;
@@ -159,17 +177,19 @@ function CatalogGridContent() {
     setSelectedFilters((prev) =>
       areFiltersEqual(prev, parsedFilters) ? prev : parsedFilters,
     );
+    const urlCategory = searchParams.get("category") || null;
+    setActiveCategory((prev) => (prev === urlCategory ? prev : urlCategory));
   }, [searchParams]);
 
   useEffect(() => {
-    const nextParams = filtersToSearchParams(selectedFilters);
+    const nextParams = filtersToSearchParams(selectedFilters, activeCategory);
     const nextQuery = nextParams.toString();
     const currentQuery = searchParams.toString();
 
     if (nextQuery !== currentQuery) {
       setSearchParams(nextParams, { replace: true });
     }
-  }, [selectedFilters, searchParams, setSearchParams]);
+  }, [selectedFilters, activeCategory, searchParams, setSearchParams]);
 
   // Initial fetch
   useEffect(() => {
@@ -201,8 +221,10 @@ function CatalogGridContent() {
   const { loaderRef } = useInfiniteScroll(loadMore, hasMore);
 
   const hasActiveFilters = useMemo(
-    () => FILTER_KEYS.some((key) => selectedFilters[key].length > 0),
-    [selectedFilters],
+    () =>
+      FILTER_KEYS.some((key) => selectedFilters[key].length > 0) ||
+      activeCategory !== null,
+    [selectedFilters, activeCategory],
   );
 
   const filteredProducts = useMemo(() => {
@@ -245,41 +267,59 @@ function CatalogGridContent() {
 
   const clearAllFilters = () => {
     setSelectedFilters(buildInitialFilters());
+    setActiveCategory(null);
   };
 
-  return (
-    <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 xl:gap-12">
-      <aside className="lg:sticky lg:top-24 h-fit border border-zinc-200 rounded-xl p-5 bg-white">
-        <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
-          <h2 className="text-base font-semibold text-zinc-900 tracking-wide uppercase">
-            Filters
-          </h2>
-          <button
-            type="button"
-            onClick={clearAllFilters}
-            disabled={!hasActiveFilters}
-            className="text-xs font-semibold text-red-600 transition-colors duration-200 hover:text-red-700 disabled:text-zinc-400 disabled:cursor-not-allowed"
-          >
-            Clear all
-          </button>
-        </div>
+  const handleCategoryChange = (slug) => {
+    setActiveCategory((prev) => (prev === slug ? null : slug));
+  };
 
-        <div className="mt-2">
-          {FILTER_KEYS.map((key) => (
-            <FilterSection
-              key={key}
-              title={FILTER_TITLES[key]}
-              isOpen={openSections[key]}
-              onToggle={() => toggleSection(key)}
+  const activeCategoryLabel = useMemo(() => {
+    const found = CATEGORY_OPTIONS.find((c) => c.slug === activeCategory);
+    return found?.label || null;
+  }, [activeCategory]);
+
+  const breadcrumbItems = useMemo(() => {
+    const items = [{ label: "Catalog", href: "/catalog" }];
+    if (activeCategoryLabel) {
+      items.push({ label: activeCategoryLabel });
+    }
+    return items;
+  }, [activeCategoryLabel]);
+
+  return (
+    <>
+      <Breadcrumb items={breadcrumbItems} className="mb-6" />
+      <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 xl:gap-12">
+        <aside className="lg:sticky lg:top-24 h-fit border border-zinc-200 rounded-xl p-5 bg-white">
+          <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
+            <h2 className="text-base font-semibold text-zinc-900 tracking-wide uppercase">
+              Filters
+            </h2>
+            <button
+              type="button"
+              onClick={clearAllFilters}
+              disabled={!hasActiveFilters}
+              className="text-xs font-semibold text-red-600 transition-colors duration-200 hover:text-red-700 disabled:text-zinc-400 disabled:cursor-not-allowed"
             >
-              {FILTER_OPTIONS[key].map((value) => {
-                const isSelected = selectedFilters[key].includes(value);
+              Clear all
+            </button>
+          </div>
+
+          <div className="mt-2">
+            <FilterSection
+              title="Category"
+              isOpen={openSections.category !== false}
+              onToggle={() => toggleSection("category")}
+            >
+              {CATEGORY_OPTIONS.map(({ slug, label }) => {
+                const isSelected = activeCategory === slug;
 
                 return (
                   <button
-                    key={value}
+                    key={slug}
                     type="button"
-                    onClick={() => toggleFilter(key, value)}
+                    onClick={() => handleCategoryChange(slug)}
                     className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
                       isSelected
                         ? "bg-zinc-900 text-white border-zinc-900"
@@ -287,60 +327,93 @@ function CatalogGridContent() {
                     }`}
                     aria-pressed={isSelected}
                   >
-                    {value}
+                    {label}
                   </button>
                 );
               })}
             </FilterSection>
-          ))}
-        </div>
-      </aside>
 
-      <div className="flex flex-col gap-8">
-        {hasActiveFilters && (
-          <p className="text-sm text-zinc-600">
-            Showing {filteredProducts.length} result
-            {filteredProducts.length === 1 ? "" : "s"} based on your filters.
-          </p>
-        )}
+            {FILTER_KEYS.map((key) => (
+              <FilterSection
+                key={key}
+                title={FILTER_TITLES[key]}
+                isOpen={openSections[key]}
+                onToggle={() => toggleSection(key)}
+              >
+                {FILTER_OPTIONS[key].map((value) => {
+                  const isSelected = selectedFilters[key].includes(value);
 
-        <ProductGrid>
-          {filteredProducts.map((product) => (
-            <ProductCard key={product.id} product={product} onQuickLook={setQuickLookProduct} />
-          ))}
-
-          {loading &&
-            Array.from({ length: 4 }).map((_, i) => (
-              <ProductSkeleton key={`skeleton-${i}`} />
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      onClick={() => toggleFilter(key, value)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        isSelected
+                          ? "bg-zinc-900 text-white border-zinc-900"
+                          : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
+                      }`}
+                      aria-pressed={isSelected}
+                    >
+                      {value}
+                    </button>
+                  );
+                })}
+              </FilterSection>
             ))}
-        </ProductGrid>
-
-        {!loading && filteredProducts.length === 0 && (
-          <div className="border border-dashed border-zinc-300 rounded-xl p-8 text-center text-zinc-600">
-            No products match the selected filters. Try removing one or two
-            filters.
           </div>
-        )}
+        </aside>
 
-        <div
-          ref={loaderRef}
-          className="h-10 w-full flex items-center justify-center text-zinc-500"
-        >
-          {loading
-            ? "Loading more items..."
-            : hasMore
-              ? "Scroll down for more"
-              : "You have reached the end."}
+        <div className="flex flex-col gap-8">
+          {hasActiveFilters && (
+            <p className="text-sm text-zinc-600">
+              Showing {filteredProducts.length} result
+              {filteredProducts.length === 1 ? "" : "s"} based on your filters.
+            </p>
+          )}
+
+          <ProductGrid>
+            {filteredProducts.map((product) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                onQuickLook={setQuickLookProduct}
+              />
+            ))}
+
+            {loading &&
+              Array.from({ length: 4 }).map((_, i) => (
+                <ProductSkeleton key={`skeleton-${i}`} />
+              ))}
+          </ProductGrid>
+
+          {!loading && filteredProducts.length === 0 && (
+            <div className="border border-dashed border-zinc-300 rounded-xl p-8 text-center text-zinc-600">
+              No products match the selected filters. Try removing one or two
+              filters.
+            </div>
+          )}
+
+          <div
+            ref={loaderRef}
+            className="h-10 w-full flex items-center justify-center text-zinc-500"
+          >
+            {loading
+              ? "Loading more items..."
+              : hasMore
+                ? "Scroll down for more"
+                : "You have reached the end."}
+          </div>
         </div>
-      </div>
 
-      {/* Quick Look Panel */}
-      <QuickLookPanel
-        product={quickLookProduct}
-        isOpen={!!quickLookProduct}
-        onClose={() => setQuickLookProduct(null)}
-      />
-    </div>
+        {/* Quick Look Panel */}
+        <QuickLookPanel
+          product={quickLookProduct}
+          isOpen={!!quickLookProduct}
+          onClose={() => setQuickLookProduct(null)}
+        />
+      </div>
+    </>
   );
 }
 
