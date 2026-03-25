@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X, ShoppingBag } from 'lucide-react';
+import { SizeGuideModal } from './SizeGuideModal';
 
 const COLOR_HEX_MAP = {
   Black: '#18181b',
@@ -17,6 +18,7 @@ const COLOR_HEX_MAP = {
 export function QuickLookPanel({ product, isOpen, onClose }) {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(null);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   // Reset selections when product changes
   useEffect(() => {
@@ -125,9 +127,17 @@ export function QuickLookPanel({ product, isOpen, onClose }) {
                 {/* ── Size Selector ──────────────────────── */}
                 {product.sizes && product.sizes.length > 0 && (
                   <div>
-                    <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider mb-2.5">
-                      Size
-                    </p>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                        Size
+                      </p>
+                      <button
+                        className="text-xs text-violet-600 font-medium hover:underline"
+                        onClick={() => setIsSizeGuideOpen(true)}
+                      >
+                        Size Guide
+                      </button>
+                    </div>
                     <div className="flex flex-wrap gap-2">
                       {product.sizes.map((size) => {
                         const isActive = selectedSize === size;
@@ -228,6 +238,13 @@ export function QuickLookPanel({ product, isOpen, onClose }) {
                 <ShoppingBag size={18} />
                 {selectedSize ? 'Add to Cart' : 'Select a Size'}
               </button>
+
+              {/* Size Guide Modal */}
+              <SizeGuideModal
+                isOpen={isSizeGuideOpen}
+                onClose={() => setIsSizeGuideOpen(false)}
+                onSelectSize={(size) => setSelectedSize(size)}
+              />
             </div>
           </motion.aside>
         </div>

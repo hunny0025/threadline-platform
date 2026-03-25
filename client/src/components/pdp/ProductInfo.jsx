@@ -1,5 +1,6 @@
 import React, { useState, forwardRef } from 'react';
 import { ShoppingBag, Heart, Share2, Truck, RotateCcw } from 'lucide-react';
+import { SizeGuideModal } from '../catalog/SizeGuideModal';
 
 const COLOR_HEX_MAP = {
   Black: '#18181b',
@@ -18,6 +19,7 @@ export const ProductInfo = forwardRef(function ProductInfo({ product }, ctaRef) 
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(product?.color || null);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
 
   if (!product) return null;
 
@@ -90,7 +92,10 @@ export const ProductInfo = forwardRef(function ProductInfo({ product }, ctaRef) 
             <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
               Size
             </p>
-            <button className="text-xs text-violet-600 font-medium hover:underline">
+            <button
+              className="text-xs text-violet-600 font-medium hover:underline"
+              onClick={() => setIsSizeGuideOpen(true)}
+            >
               Size Guide
             </button>
           </div>
@@ -200,6 +205,13 @@ export const ProductInfo = forwardRef(function ProductInfo({ product }, ctaRef) 
           <span>30-day hassle-free returns</span>
         </div>
       </div>
+
+      {/* Size Guide Modal */}
+      <SizeGuideModal
+        isOpen={isSizeGuideOpen}
+        onClose={() => setIsSizeGuideOpen(false)}
+        onSelectSize={(size) => setSelectedSize(size)}
+      />
     </div>
   );
 });

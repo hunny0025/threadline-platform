@@ -1,0 +1,362 @@
+/* ============================================================
+   SizeGuideModal — Scoped Styles
+   ============================================================ */
+
+/* ── Tab Bar ─────────────────────────────────────────────── */
+.sg-tabs {
+  display: flex;
+  border-bottom: 1px solid #e4e4e7;
+  gap: 0;
+}
+
+.sg-tab {
+  position: relative;
+  flex: 1;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #a1a1aa;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sg-tab:hover {
+  color: #52525b;
+}
+
+.sg-tab--active {
+  color: #18181b;
+}
+
+/* Animated underline */
+.sg-tab::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: -1px;
+  height: 2px;
+  background: #18181b;
+  border-radius: 2px 2px 0 0;
+  transform: scaleX(0);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sg-tab--active::after {
+  transform: scaleX(1);
+}
+
+/* ── Unit Toggle ─────────────────────────────────────────── */
+.sg-unit-toggle {
+  display: inline-flex;
+  border-radius: 9999px;
+  background: #f4f4f5;
+  padding: 3px;
+  gap: 2px;
+}
+
+.sg-unit-btn {
+  padding: 4px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 9999px;
+  border: none;
+  cursor: pointer;
+  color: #71717a;
+  background: transparent;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sg-unit-btn--active {
+  background: #18181b;
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ── Measurement Input Group ─────────────────────────────── */
+.sg-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sg-input-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.sg-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sg-input {
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #18181b;
+  background: #fafafa;
+  border: 1.5px solid #e4e4e7;
+  border-radius: 10px;
+  outline: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.sg-input::-webkit-outer-spin-button,
+.sg-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sg-input:hover {
+  border-color: #d4d4d8;
+}
+
+.sg-input:focus {
+  border-color: #18181b;
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.06);
+}
+
+.sg-input--highlighted {
+  border-color: #8b5cf6;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.10);
+}
+
+.sg-input-suffix {
+  position: absolute;
+  right: 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #a1a1aa;
+  pointer-events: none;
+}
+
+/* ── Result Badge ────────────────────────────────────────── */
+.sg-result {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+  border: 1.5px solid #ddd6fe;
+}
+
+.sg-result__size {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #8b5cf6;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-display, 'Satoshi', 'Inter', sans-serif);
+  letter-spacing: -0.02em;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.sg-result__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sg-result__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #18181b;
+}
+
+.sg-result__hint {
+  font-size: 12px;
+  color: #71717a;
+}
+
+/* ── Size Chart Table ────────────────────────────────────── */
+.sg-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: 12px;
+  border: 1px solid #e4e4e7;
+}
+
+.sg-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  text-align: center;
+}
+
+.sg-table th {
+  padding: 10px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #71717a;
+  background: #fafafa;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.sg-table td {
+  padding: 10px 14px;
+  color: #3f3f46;
+  font-weight: 500;
+  border-bottom: 1px solid #f4f4f5;
+  white-space: nowrap;
+}
+
+.sg-table tr:last-child td {
+  border-bottom: none;
+}
+
+.sg-table tr:hover td {
+  background: #fafafa;
+}
+
+.sg-table td.sg-table__highlight {
+  background: #f5f3ff;
+  color: #7c3aed;
+  font-weight: 700;
+}
+
+/* ── SVG Diagram ─────────────────────────────────────────── */
+.sg-diagram {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.sg-diagram svg {
+  width: 100%;
+  max-width: 200px;
+  height: auto;
+}
+
+.sg-diagram__body {
+  fill: none;
+  stroke: #d4d4d8;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.3s ease;
+}
+
+.sg-diagram__line {
+  stroke: #d4d4d8;
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  transition: stroke 0.3s ease;
+}
+
+.sg-diagram__line--active {
+  stroke: #8b5cf6;
+  stroke-width: 1.5;
+  stroke-dasharray: none;
+}
+
+.sg-diagram__dot {
+  fill: #d4d4d8;
+  transition: fill 0.3s ease, r 0.3s ease;
+}
+
+.sg-diagram__dot--active {
+  fill: #8b5cf6;
+}
+
+.sg-diagram__label {
+  font-size: 9px;
+  font-weight: 600;
+  fill: #a1a1aa;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  transition: fill 0.3s ease;
+}
+
+.sg-diagram__label--active {
+  fill: #8b5cf6;
+}
+
+/* ── CTA Button ──────────────────────────────────────────── */
+.sg-apply-btn {
+  width: 100%;
+  padding: 12px 24px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  background: #18181b;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: inherit;
+}
+
+.sg-apply-btn:hover {
+  background: #27272a;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sg-apply-btn:active {
+  transform: scale(0.98);
+}
+
+.sg-apply-btn:disabled {
+  background: #e4e4e7;
+  color: #a1a1aa;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Layout: Two-column for desktop ──────────────────────── */
+.sg-finder-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 24px;
+}
+
+@media (min-width: 640px) {
+  .sg-finder-grid {
+    grid-template-columns: 180px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+}
+
+/* ── How-to-measure helper ───────────────────────────────── */
+.sg-how-to {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  font-size: 12px;
+  color: #92400e;
+  line-height: 1.5;
+}
+
+.sg-how-to svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}
