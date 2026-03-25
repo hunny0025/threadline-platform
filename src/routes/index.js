@@ -8,5 +8,6 @@ router.use('/auth', require('./auth'));
 router.use('/categories', require('./categories'));
 router.use('/analytics', require('./analytics'));
 router.use('/search', require('./search'));
+router.use('/cart', require('./cart'));
 
 module.exports = router;
