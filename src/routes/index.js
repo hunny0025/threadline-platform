@@ -9,5 +9,6 @@ router.use('/categories', require('./categories'));
 router.use('/analytics', require('./analytics'));
 router.use('/search', require('./search'));
 router.use('/cart', require('./cart'));
+router.use('/newsletter', require('./newsletter'));
 
 module.exports = router;
