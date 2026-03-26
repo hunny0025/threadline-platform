@@ -12,7 +12,7 @@ exports.subscribe = async (req, res) => {
     }
 
     // Step 2 — Validate email format using regex
-    const emailRegex = /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/;
+    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
     if (!emailRegex.test(email)) {
       return sendError(res, 'Please provide a valid email address', 400);
     }
