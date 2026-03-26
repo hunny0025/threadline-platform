@@ -10,5 +10,6 @@ router.use('/analytics', require('./analytics'));
 router.use('/search', require('./search'));
 router.use('/cart', require('./cart'));
 router.use('/newsletter', require('./newsletter'));
+router.use('/content', require('./content'));
 
 module.exports = router;
