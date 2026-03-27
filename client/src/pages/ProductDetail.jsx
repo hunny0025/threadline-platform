@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 import { ImageGallery } from '../components/pdp/ImageGallery';
 import { ProductInfo } from '../components/pdp/ProductInfo';
 import { StickyAddToCart } from '../components/pdp/StickyAddToCart';
+import { UserReviewGallery } from '../components/pdp/UserReviewGallery';
 import { useSectionReveal } from '../hooks/useSectionReveal';
 
 /* ── Mock data generator (same pattern as Catalog.jsx) ──────── */
@@ -78,6 +79,7 @@ export function ProductDetail() {
   const galleryReveal = useSectionReveal({ delay: 0 });
   const infoReveal    = useSectionReveal({ delay: 120 });
   const metaReveal    = useSectionReveal({ delay: 200, threshold: 0.1 });
+  const socialReveal  = useSectionReveal({ delay: 300, threshold: 0.1 });
 
   return (
     <>
@@ -144,6 +146,11 @@ export function ProductDetail() {
               </div>
             </div>
           </section>
+        </div>
+
+        {/* ── Social Proof / User Review Gallery ──────────────── */}
+        <div ref={socialReveal.ref} style={socialReveal.style}>
+          <UserReviewGallery />
         </div>
       </div>
 

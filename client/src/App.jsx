@@ -16,9 +16,15 @@ import {
 } from "@/src/components/ui";
 import "./App.css";
 
+import { useEffect } from "react";
+
 // Animated routes component that uses location for AnimatePresence
 function AnimatedRoutes() {
   const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
 
   return (
     <PageTransition preset="slideUp" duration={0.4}>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Heart, Eye } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 /**
  * Presentation component for a single product.
@@ -10,7 +11,7 @@ export function ProductCard({ product, onQuickLook }) {
   if (!product) return null;
 
   return (
-    <div className="flex flex-col gap-3 group cursor-pointer relative">
+    <Link to={`/product/${product.id || 1}`} className="flex flex-col gap-3 group cursor-pointer relative">
       <div className="relative aspect-[3/4] bg-zinc-100 overflow-hidden rounded-md">
         {/* Primary Image */}
         <img 
@@ -99,6 +100,6 @@ export function ProductCard({ product, onQuickLook }) {
         <h3 className="text-sm font-medium text-zinc-900 line-clamp-1">{product.title || 'Classic Oxford Shirt'}</h3>
         <p className="text-sm text-zinc-500 mt-0.5">${product.price || '89.00'}</p>
       </div>
-    </div>
+    </Link>
   );
 }
