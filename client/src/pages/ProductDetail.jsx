@@ -5,6 +5,7 @@ import { ImageGallery } from '../components/pdp/ImageGallery';
 import { ProductInfo } from '../components/pdp/ProductInfo';
 import { StickyAddToCart } from '../components/pdp/StickyAddToCart';
 import { UserReviewGallery } from '../components/pdp/UserReviewGallery';
+import { CompleteTheLook } from '../components/pdp/CompleteTheLook';
 import { useSectionReveal } from '../hooks/useSectionReveal';
 
 /* ── Mock data generator (same pattern as Catalog.jsx) ──────── */
@@ -79,6 +80,7 @@ export function ProductDetail() {
   const galleryReveal = useSectionReveal({ delay: 0 });
   const infoReveal    = useSectionReveal({ delay: 120 });
   const metaReveal    = useSectionReveal({ delay: 200, threshold: 0.1 });
+  const ctlReveal     = useSectionReveal({ delay: 250, threshold: 0.1 });
   const socialReveal  = useSectionReveal({ delay: 300, threshold: 0.1 });
 
   return (
@@ -114,6 +116,11 @@ export function ProductDetail() {
           <div ref={infoReveal.ref} style={infoReveal.style}>
             <ProductInfo product={product} ref={ctaRef} />
           </div>
+        </div>
+
+        {/* ── Complete The Look Section ──────────────────────── */}
+        <div ref={ctlReveal.ref} style={ctlReveal.style}>
+          <CompleteTheLook productId={product.id} />
         </div>
 
         {/* ── Extra Details Section (below fold) ──────────────── */}
