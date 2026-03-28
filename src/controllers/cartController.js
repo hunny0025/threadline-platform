@@ -1,8 +1,8 @@
 const Cart = require('../models/Cart');
 const ProductVariant = require('../models/ProductVariant');
+const { reserveStock, releaseByVariant } = require('../services/stockService');
 const { sendSuccess, sendError } = require('../utils/response');
 
-// Helper to get or create cart
 const getOrCreateCart = async (userId, sessionId) => {
   let cart;
   if (userId) {
@@ -26,11 +26,9 @@ exports.getCart = async (req, res) => {
   try {
     const userId = req.user?.id || null;
     const sessionId = req.headers['x-session-id'] || null;
-
     if (!userId && !sessionId) {
       return sendError(res, 'Session ID or auth token required', 400);
     }
-
     const cart = await getOrCreateCart(userId, sessionId);
     await cart.populate('items.variant');
     sendSuccess(res, cart, 'Cart fetched successfully');
@@ -51,10 +49,15 @@ exports.addToCart = async (req, res) => {
 
     const variant = await ProductVariant.findById(variantId);
     if (!variant) return sendError(res, 'Variant not found', 404);
-    if (variant.stock < quantity) return sendError(res, 'Insufficient stock', 400);
+
+    // Reserve stock (blocks oversell)
+    try {
+      await reserveStock(variantId, quantity, userId, sessionId);
+    } catch (err) {
+      return sendError(res, err.message, 400);
+    }
 
     const cart = await getOrCreateCart(userId, sessionId);
-
     const existingItem = cart.items.find(
       item => item.variant.toString() === variantId
     );
@@ -89,6 +92,8 @@ exports.updateCart = async (req, res) => {
     if (!item) return sendError(res, 'Item not found in cart', 404);
 
     if (quantity <= 0) {
+      // Release reservation
+      await releaseByVariant(variantId, userId, sessionId);
       cart.items = cart.items.filter(i => i.variant.toString() !== variantId);
     } else {
       item.quantity = quantity;
@@ -110,6 +115,9 @@ exports.removeFromCart = async (req, res) => {
 
     if (!variantId) return sendError(res, 'variantId is required', 400);
 
+    // Release stock reservation
+    await releaseByVariant(variantId, userId, sessionId);
+
     const cart = await getOrCreateCart(userId, sessionId);
     cart.items = cart.items.filter(i => i.variant.toString() !== variantId);
     await cart.save();
@@ -119,7 +127,7 @@ exports.removeFromCart = async (req, res) => {
   }
 };
 
-// POST /cart/merge (merge guest cart on login)
+// POST /cart/merge
 exports.mergeCart = async (req, res) => {
   try {
     const userId = req.user?.id;
@@ -140,7 +148,6 @@ exports.mergeCart = async (req, res) => {
       return sendSuccess(res, guestCart, 'Cart merged successfully');
     }
 
-    // Merge guest items into user cart
     guestCart.items.forEach(guestItem => {
       const existing = userCart.items.find(
         i => i.variant.toString() === guestItem.variant.toString()

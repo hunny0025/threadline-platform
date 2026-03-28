@@ -1,5 +1,6 @@
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
+const { decrementOnOrder } = require('../services/stockService');
 const { sendSuccess, sendError } = require('../utils/response');
 const { paginate } = require('../utils/pagination');
 
@@ -7,28 +8,40 @@ const { paginate } = require('../utils/pagination');
 exports.createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    
+    const { paymentMethod = 'cod' } = req.body;
 
-    // Get user cart
     const cart = await Cart.findOne({ userId }).populate('items.variant');
     if (!cart || cart.items.length === 0) {
       return sendError(res, 'Cart is empty', 400);
     }
 
-    // Build order items and calculate total
+    // Atomically decrement stock for each item — blocks oversell
     let totalAmount = 0;
-    const orderItems = cart.items.map(item => {
+    const orderItems = [];
+
+    for (const item of cart.items) {
+      try {
+        await decrementOnOrder(
+          item.variant._id,
+          item.quantity,
+          userId,
+          null
+        );
+      } catch (err) {
+        return sendError(res, `Stock error for ${item.variant.sku}: ${err.message}`, 400);
+      }
+
       const price = item.variant.price || 0;
       totalAmount += price * item.quantity;
-      return {
+      orderItems.push({
         productId: item.variant.product,
         variantId: item.variant._id,
         size: item.variant.size,
         color: item.variant.color,
         price,
         quantity: item.quantity,
-      };
-    });
+      });
+    }
 
     const order = await Order.create({
       userId,
@@ -37,7 +50,7 @@ exports.createOrder = async (req, res) => {
       statusHistory: [{ status: 'placed' }],
     });
 
-    // Clear cart after order
+    // Clear cart
     cart.items = [];
     await cart.save();
 
