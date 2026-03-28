@@ -104,7 +104,7 @@ export function ProductDetail() {
         </nav>
 
         {/* ── Main PDP Grid ───────────────────────────────────── */}
-        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-6 lg:gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-[55fr_45fr] gap-6 lg:gap-12">
           {/* Left: Image Gallery */}
           <div ref={galleryReveal.ref} style={galleryReveal.style}>
             <div className="lg:sticky lg:top-24">

@@ -44,17 +44,12 @@ export function HeroVideoBanner() {
           playsInline
           poster="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?q=80&w=2070&auto=format&fit=crop"
         >
-          {/* High-bitrate optimal source */}
-          <source
-            src="https://videos.pexels.com/video-files/3205917/3205917-uhd_2560_1440_25fps.mp4"
-            type="video/mp4"
-          />
-          {/* Fallback source in case first fails */}
-          <source
-            src="https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
-            type="video/mp4"
-          />
-          Your browser does not support the video tag.
+          {/* 
+            High-bitrate optimal source (Pexels links frequently expire, so this may 403).
+            The previous fallback was ForBiggerJoyrides.mp4 which contained baked-in text 
+            that overlapped the hero text. Leaving sources empty to gracefully fall back 
+            to the beautiful fashion poster image.
+          */}
         </video>
 
         {/* Overlay gradient for text readability and premium look */}

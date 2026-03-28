@@ -5,6 +5,7 @@ import { Search, X, User } from "lucide-react";
 import { useScrollDirection } from "../../hooks/useScrollDirection";
 import { SearchBar } from "../ui/SearchBar";
 import { AuthModal, Button } from "../ui";
+import { CartDrawer } from "./CartDrawer";
 
 export function Header() {
   const scrollDirection = useScrollDirection();
@@ -13,6 +14,45 @@ export function Header() {
   const [isSearching, setIsSearching] = useState(false);
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  
+  // Mock Cart State
+  const [cartItems, setCartItems] = useState([
+    {
+      id: "1",
+      title: "Heavyweight Boxy Tee",
+      price: 45,
+      quantity: 1,
+      size: "L",
+      color: "Washed Black",
+      image:
+        "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80",
+    },
+    {
+      id: "2",
+      title: "Nylon Cargo Pants",
+      price: 120,
+      quantity: 1,
+      size: "M",
+      color: "Olive",
+      image:
+        "https://images.unsplash.com/photo-1624378441864-6da7c44422e1?w=500&q=80",
+    },
+  ]);
+
+  const updateQuantity = (id, newQuantity) => {
+    if (newQuantity < 1) return;
+    setCartItems((prev) =>
+      prev.map((item) =>
+        item.id === id ? { ...item, quantity: newQuantity } : item
+      )
+    );
+  };
+
+  const removeItem = (id) => {
+    setCartItems((prev) => prev.filter((item) => item.id !== id));
+  };
+
 
   // Auth handlers
   const openLogin = () => {
@@ -137,15 +177,17 @@ export function Header() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0 flex items-center gap-2">
-              <span className="text-2xl">🧵</span>
-              <span className="font-display font-bold text-xl tracking-tight text-zinc-900">
-                Threadline
-              </span>
-            </Link>
+            <div className="flex-1 flex justify-start">
+              <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+                <span className="text-2xl">🧵</span>
+                <span className="font-display font-bold text-xl tracking-tight text-zinc-900">
+                  Threadline
+                </span>
+              </Link>
+            </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden md:flex flex-shrink-0 space-x-8">
               <Link
                 to="/shop"
                 className="font-body text-sm font-medium text-zinc-600 hover:text-violet-600 transition-colors"
@@ -167,7 +209,7 @@ export function Header() {
             </nav>
 
             {/* Actions */}
-            <div className="flex items-center space-x-4">
+            <div className="flex-1 flex items-center justify-end space-x-4">
               {/* Search Button */}
               <button
                 onClick={openSearch}
@@ -177,7 +219,10 @@ export function Header() {
                 <Search className="h-5 w-5" />
               </button>
 
-              <button className="relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none">
+              <button 
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
+              >
                 <span className="sr-only">Cart</span>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -194,9 +239,11 @@ export function Header() {
                   <circle cx="19" cy="21" r="1" />
                   <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                 </svg>
-                <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1 -translate-y-1 bg-violet-600 rounded-full">
-                  3
-                </span>
+                {cartItems.length > 0 && (
+                  <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1 -translate-y-1 bg-violet-600 rounded-full">
+                    {cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+                  </span>
+                )}
               </button>
 
               {/* Sign In Button */}
@@ -310,6 +357,15 @@ export function Header() {
         onLogin={handleLogin}
         onSignup={handleSignup}
         onGoogleAuth={handleGoogleAuth}
+      />
+
+      {/* Cart Drawer */}
+      <CartDrawer 
+        isOpen={isCartOpen}
+        onClose={() => setIsCartOpen(false)}
+        cartItems={cartItems}
+        updateQuantity={updateQuantity}
+        removeItem={removeItem}
       />
     </>
   );
