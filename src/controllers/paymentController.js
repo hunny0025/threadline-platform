@@ -3,9 +3,9 @@ const crypto = require('crypto');
 const Order = require('../models/Order');
 const { sendSuccess, sendError } = require('../utils/response');
 
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+const getRazorpay = () => new Razorpay({
+  key_id: process.env.RAZORPAY_KEY_ID || 'placeholder',
+  key_secret: process.env.RAZORPAY_KEY_SECRET || 'placeholder',
 });
 
 exports.createIntent = async (req, res) => {
