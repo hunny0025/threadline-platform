@@ -8,7 +8,7 @@ const { paginate } = require('../utils/pagination');
 exports.createOrder = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { paymentMethod = 'cod' } = req.body;
+   
 
     const cart = await Cart.findOne({ userId }).populate('items.variant');
     if (!cart || cart.items.length === 0) {
