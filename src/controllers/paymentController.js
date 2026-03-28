@@ -19,7 +19,7 @@ exports.createIntent = async (req, res) => {
       currency: 'INR',
       receipt: `receipt_${orderId}`,
     };
-    const razorpayOrder = await razorpay.orders.create(options);
+    const razorpayOrder = await getRazorpay().orders.create(options);
     sendSuccess(res, {
       razorpayOrderId: razorpayOrder.id,
       amount: razorpayOrder.amount,
@@ -87,7 +87,7 @@ exports.refund = async (req, res) => {
     if (!paymentId) return sendError(res, 'paymentId is required', 400);
     const refundOptions = {};
     if (amount) refundOptions.amount = amount * 100;
-    const refund = await razorpay.payments.refund(paymentId, refundOptions);
+    const refund = await getRazorpay().payments.refund(paymentId, refundOptions);
     sendSuccess(res, refund, 'Refund initiated successfully');
   } catch (err) {
     sendError(res, err.message, 500);
