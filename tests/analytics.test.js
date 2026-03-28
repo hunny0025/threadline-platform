@@ -1,11 +1,9 @@
-
 /* eslint-disable */
-import request from 'supertest';
-import mongoose from 'mongoose';
-import { MongoMemoryServer } from 'mongodb-memory-server';
-import app from '../app.js'; // Express app (no listen())
-import AnalyticsEvent from '../models/AnalyticsEvent.js';
-
+const request = require('supertest');
+const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
+const app = require('../src/app');
+const AnalyticsEvent = require('../src/models/AnalyticsEvent');
 
 let mongod;
 
@@ -22,8 +20,6 @@ afterAll(async () => {
 afterEach(async () => {
   await AnalyticsEvent.deleteMany({});
 });
-
-
 
 const SESSION_ID = 'sess_test_abc123xyz';
 const PRODUCT_ID = new mongoose.Types.ObjectId().toString();
@@ -53,13 +49,10 @@ const validCartAdd = {
   price: 2499,
 };
 
-
-describe('POST /api/analytics/events', () => {
-
-
+describe('POST /api/v1/analytics/events', () => {
   test('logs a page_view event successfully', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(validPageView)
       .expect(201);
 
@@ -76,7 +69,7 @@ describe('POST /api/analytics/events', () => {
 
   test('logs a product_click event successfully', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(validProductClick)
       .expect(201);
 
@@ -89,7 +82,7 @@ describe('POST /api/analytics/events', () => {
 
   test('logs a cart_add event with quantity + price', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(validCartAdd)
       .expect(201);
 
@@ -102,7 +95,7 @@ describe('POST /api/analytics/events', () => {
   test('logs event with userId when provided', async () => {
     const userId = new mongoose.Types.ObjectId().toString();
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send({ ...validPageView, userId })
       .expect(201);
 
@@ -112,7 +105,7 @@ describe('POST /api/analytics/events', () => {
 
   test('userId defaults to null for anonymous/guest sessions', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(validPageView)
       .expect(201);
 
@@ -122,7 +115,7 @@ describe('POST /api/analytics/events', () => {
 
   test('captures device type from User-Agent header', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .set('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17)')
       .send(validPageView)
       .expect(201);
@@ -131,11 +124,10 @@ describe('POST /api/analytics/events', () => {
     expect(saved.meta.device).toBe('mobile');
   });
 
-
   test('returns 400 when eventType is missing', async () => {
     const { eventType, ...body } = validPageView;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(400);
 
@@ -145,7 +137,7 @@ describe('POST /api/analytics/events', () => {
 
   test('returns 400 when eventType is invalid', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send({ ...validPageView, eventType: 'wishlist_add' })
       .expect(400);
 
@@ -155,7 +147,7 @@ describe('POST /api/analytics/events', () => {
   test('returns 400 when sessionId is missing', async () => {
     const { sessionId, ...body } = validPageView;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(400);
 
@@ -165,7 +157,7 @@ describe('POST /api/analytics/events', () => {
 
   test('returns 400 when sessionId is too short (< 8 chars)', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send({ ...validPageView, sessionId: 'ab' })
       .expect(400);
 
@@ -175,7 +167,7 @@ describe('POST /api/analytics/events', () => {
   test('returns 400 for page_view without page field', async () => {
     const { page, ...body } = validPageView;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(400);
 
@@ -186,7 +178,7 @@ describe('POST /api/analytics/events', () => {
   test('returns 400 for product_click without productId', async () => {
     const { productId, ...body } = validProductClick;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(400);
 
@@ -197,7 +189,7 @@ describe('POST /api/analytics/events', () => {
   test('returns 400 for cart_add without productId', async () => {
     const { productId, ...body } = validCartAdd;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(400);
 
@@ -206,19 +198,17 @@ describe('POST /api/analytics/events', () => {
 
   test('returns 400 when userId is a malformed ObjectId', async () => {
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send({ ...validPageView, userId: 'not-an-objectid' })
       .expect(400);
 
     expect(res.body.success).toBe(false);
   });
 
-  
-
   test('cart_add defaults quantity to 1 when not provided', async () => {
     const { quantity, ...body } = validCartAdd;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(201);
 
@@ -229,7 +219,7 @@ describe('POST /api/analytics/events', () => {
   test('page_view stores null referrer when not provided', async () => {
     const { referrer, ...body } = validPageView;
     const res = await request(app)
-      .post('/api/analytics/events')
+      .post('/api/v1/analytics/events')
       .send(body)
       .expect(201);
 
@@ -238,10 +228,7 @@ describe('POST /api/analytics/events', () => {
   });
 });
 
-
-
-describe('GET /api/analytics/summary', () => {
-  // Seed some events before running summary tests
+describe('GET /api/v1/analytics/summary', () => {
   beforeEach(async () => {
     await AnalyticsEvent.insertMany([
       {
@@ -263,10 +250,9 @@ describe('GET /api/analytics/summary', () => {
 
   test('requires authentication (returns 401 for unauthenticated requests)', async () => {
     await request(app)
-      .get('/api/analytics/summary')
+      .get('/api/v1/analytics/summary')
       .expect(401);
   });
-
 
   test.todo('returns summary data for authenticated admin');
   test.todo('respects ?days query param for windowing');

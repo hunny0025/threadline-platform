@@ -1,16 +1,13 @@
-import mongoose from 'mongoose';
+const mongoose = require('mongoose');
 
 const analyticsEventSchema = new mongoose.Schema(
   {
-    
     eventType: {
       type: String,
       enum: ['page_view', 'product_click', 'cart_add'],
       required: true,
       index: true,
     },
-
-
     sessionId: {
       type: String,
       required: true,
@@ -19,17 +16,12 @@ const analyticsEventSchema = new mongoose.Schema(
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      default: null, 
+      default: null,
       index: true,
     },
-
-    
     payload: {
-      
-      page: { type: String, default: null },        // e.g. "/", "/shop", "/product/abc"
+      page: { type: String, default: null },
       referrer: { type: String, default: null },
-
-      
       productId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Product',
@@ -43,12 +35,9 @@ const analyticsEventSchema = new mongoose.Schema(
         default: null,
       },
       category: { type: String, default: null },
-
-      
       quantity: { type: Number, default: null },
       price: { type: Number, default: null },
     },
-
     meta: {
       userAgent: { type: String, default: null },
       ip: { type: String, default: null },
@@ -61,17 +50,14 @@ const analyticsEventSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true, 
+    timestamps: true,
     collection: 'analyticsevents',
   }
 );
-
 
 analyticsEventSchema.index({ eventType: 1, createdAt: -1 });
 analyticsEventSchema.index({ sessionId: 1, createdAt: 1 });
 analyticsEventSchema.index({ userId: 1, eventType: 1, createdAt: -1 });
 analyticsEventSchema.index({ 'payload.productId': 1, eventType: 1 });
 
-const AnalyticsEvent = mongoose.model('AnalyticsEvent', analyticsEventSchema);
-
-export default AnalyticsEvent;
+module.exports = mongoose.model('AnalyticsEvent', analyticsEventSchema);

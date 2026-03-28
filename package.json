@@ -12,18 +12,19 @@
         "build": "echo \"Build step placeholder\""
     },
     "jest": {
-        "testPathIgnorePatterns": [
-            "/node_modules/",
-            "tests/analytics.test.js"
-        ]
-    },
+  "testPathIgnorePatterns": [
+    "/node_modules/"
+  ]
+},
     "keywords": [],
     "author": "",
     "license": "MIT",
     "devDependencies": {
         "eslint": "^8.57.0",
         "jest": "^29.7.0",
-        "nodemon": "^3.1.14"
+        "mongodb-memory-server": "^11.0.1",
+        "nodemon": "^3.1.14",
+        "supertest": "^7.2.2"
     },
     "directories": {
         "test": "tests"
