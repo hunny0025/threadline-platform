@@ -1,5 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { X, Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "../ui";
 
 export function CartDrawer({
@@ -9,6 +10,8 @@ export function CartDrawer({
   updateQuantity,
   removeItem,
 }) {
+  const navigate = useNavigate();
+
   // Calculate totals
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
@@ -179,7 +182,14 @@ export function CartDrawer({
                   </div>
                 </div>
 
-                <Button variant="primary" className="w-full py-4 text-base">
+                <Button 
+                  variant="primary" 
+                  className="w-full py-4 text-base"
+                  onClick={() => {
+                    onClose();
+                    navigate("/checkout");
+                  }}
+                >
                   Checkout Now
                 </Button>
                 <p className="mt-4 text-xs text-center text-zinc-500 flex items-center justify-center gap-1.5">
