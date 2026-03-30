@@ -10,6 +10,13 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import path from 'path';
 
+// Bundle analyser — run with: ANALYZE=true npm run build
+let visualizer = null;
+if (process.env.ANALYZE === 'true') {
+  const { visualizer: _v } = await import('rollup-plugin-visualizer');
+  visualizer = _v({ open: true, filename: 'stats.html', gzipSize: true });
+}
+
 export default defineConfig({
   resolve: {
     alias: {
@@ -19,6 +26,7 @@ export default defineConfig({
   plugins: [
     tailwindcss(),
     react(),
+    ...(visualizer ? [visualizer] : []),
   ],
   server: {
     port: 5173,
