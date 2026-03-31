@@ -39,10 +39,26 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+const { optimizeImage } = require('../utils/imageOptimizer');
+
 // POST /products (admin)
 exports.createProduct = async (req, res) => {
   try {
-    const product = await Product.create(req.body);
+    const productData = { ...req.body };
+    
+    // Handle image uploads and optimization (Task 7)
+    if (req.files && req.files.length > 0) {
+      const optimizedImages = await Promise.all(
+        req.files.map(async (file) => {
+          // Optimize each image to WebP (standard)
+          const optimizedPath = await optimizeImage(file.path, 'webp', 1000);
+          return optimizedPath;
+        })
+      );
+      productData.images = optimizedImages;
+    }
+
+    const product = await Product.create(productData);
     sendSuccess(res, product, 'Product created successfully', 201);
   } catch (err) {
     sendError(res, err.message, 500);

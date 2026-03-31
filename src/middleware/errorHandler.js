@@ -1,6 +1,8 @@
+const logger = require('../utils/logger');
+
 // eslint-disable-next-line no-unused-vars
 module.exports = (err, req, res, next) => {
-  console.error(err.stack);
+  logger.error(`${err.status || 500} - ${err.message} - ${req.originalUrl} - ${req.method} - ${req.ip}`, { stack: err.stack });
   res.status(err.status || 500).json({
     success: false,
     status: err.status || 500,
