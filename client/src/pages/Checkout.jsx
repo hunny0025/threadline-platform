@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { motion } from "motion/react";
-import { ShoppingBag, Lock, ChevronRight } from "lucide-react";
+import { ShoppingBag, Lock, ChevronRight, CreditCard } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button, Input } from "../components/ui";
 
@@ -34,6 +34,74 @@ export function Checkout() {
     { id: "express", name: "Express Shipping (1-2 business days)", price: 15 },
   ];
   const [selectedShipping, setSelectedShipping] = useState("standard");
+
+  // Payment Form State
+  const [paymentDetails, setPaymentDetails] = useState({
+    cardNumber: "",
+    expiry: "",
+    cvc: "",
+    nameOnCard: ""
+  });
+  const [cardType, setCardType] = useState("unknown"); // visa, mastercard, amex, discover, unknown
+
+  const handlePaymentChange = (e) => {
+    const { name, value } = e.target;
+    let formattedValue = value;
+    
+    if (name === "cardNumber") {
+      const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+      
+      // Determine card type based on IIN
+      let type = "unknown";
+      if (v.match(/^4/)) type = "visa";
+      else if (v.match(/^(34|37)/)) type = "amex";
+      else if (v.match(/^5[1-5]/) || v.match(/^222[1-9]|22[3-9][0-9]|2[3-6][0-9]{2}|27[01][0-9]|2720/)) type = "mastercard";
+      else if (v.match(/^6(?:011|5[0-9]{2})/)) type = "discover";
+      
+      setCardType(type);
+
+      if (type === "amex") {
+        // Amex: 4-6-5 format
+        const part1 = v.substring(0, 4);
+        const part2 = v.substring(4, 10);
+        const part3 = v.substring(10, 15);
+        if (v.length > 10) formattedValue = `${part1} ${part2} ${part3}`;
+        else if (v.length > 4) formattedValue = `${part1} ${part2}`;
+        else formattedValue = part1;
+      } else {
+        // Default: 4-4-4-4 format
+        const parts = [];
+        for (let i = 0; i < v.length; i += 4) {
+          parts.push(v.substring(i, i + 4));
+        }
+        // Limit to 19 characters (16 digits + 3 spaces)
+        formattedValue = parts.slice(0, 5).join(' ').substring(0, 19);
+      }
+    } else if (name === "expiry") {
+      // Basic MM / YY formatting
+      if (value.length < paymentDetails.expiry.length) {
+        formattedValue = value; // Let user delete freely
+      } else {
+        const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+        if (v.length >= 2) {
+          formattedValue = `${v.substring(0, 2)} / ${v.substring(2, 4)}`;
+        } else if (v.length === 1 && parseInt(v) > 1) {
+          formattedValue = `0${v} / `;
+        } else {
+          formattedValue = v;
+        }
+      }
+    } else if (name === "cvc") {
+      // Limit CVC length based on card type
+      const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+      formattedValue = cardType === "amex" ? v.substring(0, 4) : v.substring(0, 3);
+    }
+    
+    setPaymentDetails(prev => ({
+      ...prev,
+      [name]: formattedValue
+    }));
+  };
 
   const shippingCost = shippingOptions.find((opt) => opt.id === selectedShipping)?.price || 0;
   const tax = subtotal * 0.08;
@@ -192,34 +260,59 @@ export function Checkout() {
                 <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 space-y-4">
                   <div className="mb-4 text-sm text-zinc-600 font-medium">All transactions are secure and encrypted.</div>
                   
-                  <div className="md:col-span-2">
+                  <div className="md:col-span-2 relative">
                     <Input 
-                      type="text" 
+                      type="tel" 
+                      name="cardNumber"
                       placeholder="Card number" 
                       required 
                       aria-label="Card number"
+                      value={paymentDetails.cardNumber}
+                      onChange={handlePaymentChange}
+                      className="pr-16"
                     />
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none flex items-center">
+                      {cardType === 'visa' && <span className="font-bold text-base text-blue-800 italic select-none">VISA</span>}
+                      {cardType === 'mastercard' && (
+                        <div className="flex -space-x-1.5 opacity-80 mt-0.5">
+                          <div className="w-4 h-4 rounded-full bg-red-500/90 mix-blend-multiply" />
+                          <div className="w-4 h-4 rounded-full bg-yellow-400/90 mix-blend-multiply" />
+                        </div>
+                      )}
+                      {cardType === 'amex' && <span className="font-bold text-[11px] text-blue-500 border border-blue-500 px-1 py-0.5 rounded-sm select-none">AMEX</span>}
+                      {cardType === 'discover' && <span className="font-bold text-sm text-orange-500 select-none">Discover</span>}
+                      {cardType === 'unknown' && <CreditCard className="w-5 h-5" />}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <Input 
-                      type="text" 
+                      type="tel" 
+                      name="expiry"
                       placeholder="Expiration date (MM / YY)" 
                       required 
                       aria-label="Expiration date"
+                      value={paymentDetails.expiry}
+                      onChange={handlePaymentChange}
                     />
                     <Input 
-                      type="text" 
+                      type="tel" 
+                      name="cvc"
                       placeholder="Security code (CVC)" 
                       required 
                       aria-label="Security code"
+                      value={paymentDetails.cvc}
+                      onChange={handlePaymentChange}
                     />
                   </div>
                   <div className="md:col-span-2">
                     <Input 
                       type="text" 
+                      name="nameOnCard"
                       placeholder="Name on card" 
                       required 
                       aria-label="Name on card"
+                      value={paymentDetails.nameOnCard}
+                      onChange={handlePaymentChange}
                     />
                   </div>
                 </div>
