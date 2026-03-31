@@ -191,3 +191,117 @@ exports.filterProducts = async (req, res, next) => {
     next(err);
   }
 };
+// GET /products/:id/recommendations
+exports.getRecommendations = async (req, res) => {
+  try {
+    const mongoose = require('mongoose');
+    const productId = req.params.id;
+
+    if (!mongoose.Types.ObjectId.isValid(productId)) {
+      return sendError(res, 'Invalid product ID', 400);
+    }
+
+    // Get the source product
+    const sourceProduct = await Product.findById(productId);
+    if (!sourceProduct) return sendError(res, 'Product not found', 404);
+
+    const pipeline = [
+      // Exclude current product and inactive products
+      {
+        $match: {
+          _id: { $ne: new mongoose.Types.ObjectId(productId) },
+          isActive: true,
+        },
+      },
+      // Score each product based on shared category and tags
+      {
+        $addFields: {
+          score: {
+            $add: [
+              // +10 if same category
+              {
+                $cond: [
+                  { $eq: ['$category', sourceProduct.category] },
+                  10,
+                  0,
+                ],
+              },
+              // +5 if same gender
+              {
+                $cond: [
+                  { $eq: ['$gender', sourceProduct.gender] },
+                  5,
+                  0,
+                ],
+              },
+              // +3 if same fitType
+              {
+                $cond: [
+                  { $eq: ['$fitType', sourceProduct.fitType] },
+                  3,
+                  0,
+                ],
+              },
+              // +2 if same occasion
+              {
+                $cond: [
+                  { $eq: ['$occasion', sourceProduct.occasion] },
+                  2,
+                  0,
+                ],
+              },
+              // +1 per shared tag
+              {
+                $size: {
+                  $ifNull: [
+                    {
+                      $filter: {
+                        input: { $ifNull: ['$tags', []] },
+                        as: 'tag',
+                        cond: {
+                          $in: ['$$tag', { $ifNull: [sourceProduct.tags, []] }],
+                        },
+                      },
+                    },
+                    [],
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      },
+      // Only return products with score > 0
+      { $match: { score: { $gt: 0 } } },
+      // Sort by score descending
+      { $sort: { score: -1, createdAt: -1 } },
+      // Limit to 6
+      { $limit: 6 },
+      // Project only needed fields
+      {
+        $project: {
+          name: 1,
+          slug: 1,
+          basePrice: 1,
+          images: 1,
+          category: 1,
+          gender: 1,
+          fitType: 1,
+          occasion: 1,
+          tags: 1,
+          score: 1,
+        },
+      },
+    ];
+
+    const recommendations = await Product.aggregate(pipeline);
+
+    sendSuccess(res, {
+      productId,
+      count: recommendations.length,
+      recommendations,
+    }, 'Recommendations fetched successfully');
+  } catch (err) {
+    sendError(res, err.message, 500);
+  }
+};
