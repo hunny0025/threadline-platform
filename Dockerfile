@@ -6,6 +6,9 @@
 
 FROM node:22-alpine
 
+# Upgrade alpine packages to patch any recent CVEs
+RUN apk upgrade --no-cache
+
 WORKDIR /app
 
 # Install dependencies first (layer caching)
