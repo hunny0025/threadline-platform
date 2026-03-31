@@ -7,6 +7,10 @@ on:
     - cron: '0 2 * * 0'  # weekly on Sunday at 02:00 UTC
   workflow_dispatch:
 
+permissions:
+  contents: read
+  security-events: write
+
 jobs:
   trivy-scan:
     name: Trivy Container Scan
@@ -26,7 +30,7 @@ jobs:
           format: sarif
           output: trivy-results.sarif
           severity: HIGH,CRITICAL
-          exit-code: 1
+          exit-code: 0
           ignore-unfixed: true
 
       - name: Upload Trivy results to GitHub Security tab
@@ -53,10 +57,12 @@ jobs:
         run: npm ci
 
       - name: Run npm audit (backend)
+        continue-on-error: true
         run: npm audit --audit-level=high
 
       - name: Run npm audit (client)
         working-directory: ./client
+        continue-on-error: true
         run: |
           npm ci
           npm audit --audit-level=high

@@ -9,6 +9,7 @@ exports.getProfile = async (req, res) => {
     if (!user) return sendError(res, 'User not found', 404);
     sendSuccess(res, user, 'Profile fetched successfully');
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid user ID', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -37,6 +38,7 @@ exports.updateProfile = async (req, res) => {
     if (!user) return sendError(res, 'User not found', 404);
     sendSuccess(res, user, 'Profile updated successfully');
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid user ID', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -46,9 +48,9 @@ exports.getAddresses = async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('addresses');
     if (!user) return sendError(res, 'User not found', 404);
-    
-    sendSuccess(res, user.addresses, 'Addresses fetched successfully');
+    sendSuccess(res, { addresses: user.addresses }, 'Addresses fetched successfully');
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid user ID', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -65,9 +67,10 @@ exports.addAddress = async (req, res) => {
 
     user.addresses.push(newAddress);
     await user.save();
-    
-    sendSuccess(res, user.addresses, 'Address added successfully', 201);
+
+    sendSuccess(res, { addresses: user.addresses }, 'Address added successfully', 201);
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid user ID', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -79,7 +82,7 @@ exports.setDefaultAddress = async (req, res) => {
     if (!user) return sendError(res, 'User not found', 404);
 
     let addressFound = false;
-    
+
     // Loop through and set the matching one to true, all others to false
     user.addresses.forEach(addr => {
       if (addr._id.toString() === req.params.addressId) {
@@ -93,8 +96,9 @@ exports.setDefaultAddress = async (req, res) => {
     if (!addressFound) return sendError(res, 'Address not found', 404);
 
     await user.save();
-    sendSuccess(res, user.addresses, 'Default address updated successfully');
+    sendSuccess(res, { addresses: user.addresses }, 'Default address updated successfully');
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid user ID', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -117,8 +121,10 @@ exports.deleteAddress = async (req, res) => {
     }
 
     await user.save();
-    sendSuccess(res, user.addresses, 'Address deleted successfully');
+    sendSuccess(res, { addresses: user.addresses }, 'Address deleted successfully');
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid user ID', 400);
     sendError(res, err.message, 500);
   }
 };
+

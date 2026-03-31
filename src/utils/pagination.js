@@ -1,11 +1,13 @@
 const paginate = (data, total, page, limit) => {
+  const parsedPage = Math.max(1, parseInt(page) || 1);
+  const parsedLimit = Math.max(1, parseInt(limit) || 10);
   return {
     data,
     pagination: {
       total,
-      page: parseInt(page),
-      limit: parseInt(limit),
-      totalPages: Math.ceil(total / limit),
+      page: parsedPage,
+      limit: parsedLimit,
+      totalPages: Math.ceil(total / parsedLimit),
     },
   };
 };

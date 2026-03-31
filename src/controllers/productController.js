@@ -35,6 +35,8 @@ exports.getProductById = async (req, res) => {
     if (!product) return sendError(res, 'Product not found', 404);
     sendSuccess(res, product, 'Product fetched successfully');
   } catch (err) {
+    // CastError means the ID format is invalid — return 400 not 500
+    if (err.name === 'CastError') return sendError(res, 'Invalid product ID', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -106,7 +108,13 @@ exports.filterProducts = async (req, res, next) => {
     } = req.body;
 
     const matchStage = { isActive: true };
-    if (category) matchStage.category = new require('mongoose').Types.ObjectId(category);
+    if (category) {
+      const mongoose = require('mongoose');
+      if (!mongoose.Types.ObjectId.isValid(category)) {
+        return sendError(res, 'Invalid category ID', 400);
+      }
+      matchStage.category = new mongoose.Types.ObjectId(category);
+    }
     if (fitType) matchStage.fitType = fitType;
     if (fabricWeight) matchStage.fabricWeight = fabricWeight;
     if (gender) matchStage.gender = gender;
