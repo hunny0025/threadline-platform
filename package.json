@@ -12,10 +12,10 @@
         "build": "echo \"Build step placeholder\""
     },
     "jest": {
-  "testPathIgnorePatterns": [
-    "/node_modules/"
-  ]
-},
+        "testPathIgnorePatterns": [
+            "/node_modules/"
+        ]
+    },
     "keywords": [],
     "author": "",
     "license": "MIT",
@@ -38,6 +38,7 @@
     },
     "homepage": "https://github.com/hunny0025/threadline-platform#readme",
     "dependencies": {
+        "@sentry/node": "^10.46.0",
         "bcrypt": "^6.0.0",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
@@ -49,6 +50,7 @@
         "jsonwebtoken": "^9.0.3",
         "mongoose": "^9.3.0",
         "multer": "^2.1.1",
+        "nodemailer": "^8.0.4",
         "passport": "^0.7.0",
         "passport-google-oauth20": "^2.0.0",
         "razorpay": "^2.9.6",
