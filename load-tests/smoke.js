@@ -3,6 +3,7 @@
 // Usage: k6 run load-tests/smoke.js
 // Fast sanity check: 1 VU × 10 iterations
 // =============================================================
+/* eslint-disable */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 

@@ -3,6 +3,7 @@
 // Usage: k6 run --env BASE_URL=https://staging.railway.app load-tests/load.js
 // Ramps to 100 VUs over 1 min, holds 3 min, ramps down 1 min
 // =============================================================
+/* eslint-disable */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Trend, Rate } from 'k6/metrics';
@@ -53,3 +54,4 @@ export default function () {
 
   sleep(Math.random() * 1 + 0.5); // random think time 0.5–1.5s
 }
+/* eslint-disable */

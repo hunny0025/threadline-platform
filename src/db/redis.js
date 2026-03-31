@@ -1,9 +1,9 @@
 // Redis connection placeholder
-// Replace with actual Redis connection when needed
+// eslint-disable-next-line no-unused-vars
 const redis = {
-  get: async (key) => null,
-  set: async (key, value) => null,
-  del: async (key) => null,
+  get: async (_key) => null,
+  set: async (_key, _value) => null,
+  del: async (_key) => null,
 };
 
 module.exports = redis;
