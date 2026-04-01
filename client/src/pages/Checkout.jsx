@@ -109,8 +109,8 @@ export function Checkout() {
 
   const handlePlaceOrder = (e) => {
     e.preventDefault();
-    // Normally handled by a payment provider, simulate a short delay before navigating
-    navigate("/shop");
+    // Normally handled by a payment provider, navigate to confirmation
+    navigate("/order-confirmation");
   };
 
   return (

@@ -7,7 +7,7 @@ import { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { Header } from "./components/layout/Header";
 import { Footer } from "./components/layout/Footer";
-import { Home, Landing, About, FAQ, Returns, Catalog, ProductDetail, Checkout } from "./pages";
+import { Home, Landing, About, FAQ, Returns, Catalog, ProductDetail, Checkout, OrderConfirmation } from "./pages";
 import {
   Button,
   Modal,
@@ -38,6 +38,7 @@ function AnimatedRoutes() {
         <Route path="/faq" element={<FAQ />} />
         <Route path="/returns" element={<Returns />} />
         <Route path="/checkout" element={<Checkout />} />
+        <Route path="/order-confirmation" element={<OrderConfirmation />} />
       </Routes>
     </PageTransition>
   );

@@ -6,3 +6,4 @@ export { Returns } from "./Returns";
 export { Catalog } from "./Catalog";
 export { ProductDetail } from "./ProductDetail";
 export { Checkout } from "./Checkout";
+export { OrderConfirmation } from "./OrderConfirmation";
