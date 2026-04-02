@@ -18,6 +18,9 @@ exports.createIntent = async (req, res) => {
       amount: order.totalAmount * 100,
       currency: 'INR',
       receipt: `receipt_${orderId}`,
+      notes: {
+        orderId: orderId.toString(),
+      },
     };
     const razorpayOrder = await getRazorpay().orders.create(options);
     sendSuccess(res, {
@@ -59,6 +62,7 @@ exports.webhook = async (req, res) => {
   try {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers['x-razorpay-signature'];
+
     if (webhookSecret && signature) {
       const expectedSignature = crypto
         .createHmac('sha256', webhookSecret)
@@ -68,15 +72,44 @@ exports.webhook = async (req, res) => {
         return res.status(400).json({ error: 'Invalid webhook signature' });
       }
     }
+
     const event = req.body.event;
     const paymentEntity = req.body.payload?.payment?.entity;
+    const orderId = paymentEntity?.notes?.orderId;
+
     if (event === 'payment.captured') {
       console.log('Payment succeeded:', paymentEntity?.id);
+      if (orderId) {
+        const order = await Order.findById(orderId);
+        if (order) {
+          order.statusHistory.push({ status: 'paid' });
+          await order.save();
+          console.log(`Order ${orderId} marked as paid`);
+          const ProductVariant = require('../models/ProductVariant');
+          for (const item of order.items) {
+            await ProductVariant.findByIdAndUpdate(
+              item.variantId,
+              { $inc: { stock: -item.quantity } }
+            );
+          }
+          console.log(`Inventory synced for order ${orderId}`);
+        }
+      }
     } else if (event === 'payment.failed') {
       console.log('Payment failed:', paymentEntity?.id);
+      if (orderId) {
+        const order = await Order.findById(orderId);
+        if (order) {
+          order.statusHistory.push({ status: 'cancelled' });
+          await order.save();
+          console.log(`Order ${orderId} marked as cancelled`);
+        }
+      }
     }
+
     res.status(200).json({ received: true });
   } catch (err) {
+    console.error('Webhook error:', err.message);
     res.status(500).json({ error: err.message });
   }
 };
