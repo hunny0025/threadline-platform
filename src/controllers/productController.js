@@ -1,11 +1,24 @@
 const Product = require('../models/Product');
 const { sendSuccess, sendError } = require('../utils/response');
 const { paginate } = require('../utils/pagination');
+const { get: redisGet, set: redisSet, productKey } = require('../db/redis');
+
+const CACHE_TTL = 300; // 5 minutes
 
 // GET /products (paginate + filter)
 exports.getProducts = async (req, res) => {
   try {
     const { page = 1, limit = 10, category, gender, fitType, fabricWeight, minPrice, maxPrice } = req.query;
+
+    // Generate cache key based on query params
+    const cacheKey = productKey('list', req.query);
+
+    // Try cache first
+    const cached = await redisGet(cacheKey);
+    if (cached) {
+      return sendSuccess(res, cached, 'Products fetched successfully (cached)');
+    }
+
     const filter = { isActive: true };
     if (category) filter.category = category;
     if (gender) filter.gender = gender;
@@ -22,7 +35,13 @@ exports.getProducts = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(Number(limit))
       .sort({ createdAt: -1 });
-    sendSuccess(res, paginate(products, total, page, limit), 'Products fetched successfully');
+
+    const result = paginate(products, total, page, limit);
+
+    // Cache the result
+    await redisSet(cacheKey, result, CACHE_TTL);
+
+    sendSuccess(res, result, 'Products fetched successfully');
   } catch (err) {
     sendError(res, err.message, 500);
   }
@@ -61,6 +80,11 @@ exports.createProduct = async (req, res) => {
     }
 
     const product = await Product.create(productData);
+
+    // Invalidate product cache on create
+    const { invalidateProductCache } = require('../db/redis');
+    await invalidateProductCache();
+
     sendSuccess(res, product, 'Product created successfully', 201);
   } catch (err) {
     sendError(res, err.message, 500);
@@ -72,6 +96,12 @@ exports.updateProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
     if (!product) return sendError(res, 'Product not found', 404);
+
+    // Invalidate product cache on update
+    const { invalidateProductCache, invalidateSearchCache } = require('../db/redis');
+    await invalidateProductCache();
+    await invalidateSearchCache();
+
     sendSuccess(res, product, 'Product updated successfully');
   } catch (err) {
     sendError(res, err.message, 500);
@@ -83,6 +113,12 @@ exports.deleteProduct = async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, { isActive: false }, { new: true });
     if (!product) return sendError(res, 'Product not found', 404);
+
+    // Invalidate product cache on delete
+    const { invalidateProductCache, invalidateSearchCache } = require('../db/redis');
+    await invalidateProductCache();
+    await invalidateSearchCache();
+
     sendSuccess(res, null, 'Product deleted successfully');
   } catch (err) {
     sendError(res, err.message, 500);
@@ -106,6 +142,13 @@ exports.filterProducts = async (req, res, next) => {
       page = 1,
       limit = 20,
     } = req.body;
+
+    // Generate cache key from body params
+    const cacheKey = productKey('filter', req.body);
+    const cached = await redisGet(cacheKey);
+    if (cached) {
+      return sendSuccess(res, cached, 'Products filtered successfully (cached)');
+    }
 
     const matchStage = { isActive: true };
     if (category) {
@@ -186,7 +229,12 @@ exports.filterProducts = async (req, res, next) => {
     const products = await require('../models/Product').aggregate(pipeline);
 
     const { paginate } = require('../utils/pagination');
-    sendSuccess(res, paginate(products, total, page, limit), 'Products filtered successfully');
+    const result = paginate(products, total, page, limit);
+
+    // Cache the result
+    await redisSet(cacheKey, result, CACHE_TTL);
+
+    sendSuccess(res, result, 'Products filtered successfully');
   } catch (err) {
     next(err);
   }
