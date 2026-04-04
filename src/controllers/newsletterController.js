@@ -12,7 +12,7 @@ exports.subscribe = async (req, res) => {
     }
 
     // Step 2 — Validate email format using regex
-    const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/;
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(email)) {
       return sendError(res, 'Please provide a valid email address', 400);
     }
@@ -41,7 +41,8 @@ exports.subscribe = async (req, res) => {
       201
     );
 
-  } catch (err) {
-    sendError(res, err.message, 500);
+    } catch (err) {
+    console.error('[Newsletter] subscribe error:', err);
+    sendError(res, 'Something went wrong. Please try again.', 500);
   }
 };
