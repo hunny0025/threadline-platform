@@ -5,11 +5,14 @@ const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 let redis = null;
 
 const connectRedis = () => {
+  if (redis) return redis;
+
   try {
     redis = new Redis(redisUrl, {
       maxRetriesPerRequest: 3,
       retryDelayOnFailover: 100,
       lazyConnect: true,
+      connectTimeout: 10000,
     });
 
     redis.on('connect', () => {
@@ -18,6 +21,11 @@ const connectRedis = () => {
 
     redis.on('error', (err) => {
       console.error('Redis connection error:', err.message);
+    });
+
+    // Auto-connect
+    redis.connect().catch(() => {
+      // Connection will be retried automatically
     });
 
     return redis;

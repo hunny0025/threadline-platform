@@ -93,8 +93,17 @@ const redis = require('./db/redis');
 // Health check (Task 8 & 9)
 app.get('/health', async (req, res) => {
   const mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
-  const redisStatus = redis.status === 'ready' ? 'connected' : 'disconnected';
-  
+
+  let redisStatus = 'disconnected';
+  if (redis) {
+    try {
+      await redis.ping();
+      redisStatus = 'connected';
+    } catch {
+      redisStatus = 'disconnected';
+    }
+  }
+
   const status = mongoStatus === 'connected' && redisStatus === 'connected' ? 'OK' : 'DEGRADED';
   
   res.status(status === 'OK' ? 200 : 503).json({
