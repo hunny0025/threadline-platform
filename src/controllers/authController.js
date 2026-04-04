@@ -2,10 +2,13 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { sendSuccess, sendError } = require('../utils/response');
 
+const getJwtSecret = () => process.env.JWT_SECRET || 'test_jwt_secret_fallback';
+const getRefreshSecret = () => process.env.JWT_REFRESH_SECRET || 'test_refresh_secret_fallback';
+
 const generateAccessToken = (user) => {
   return jwt.sign(
     { id: user._id, role: user.role },
-    process.env.JWT_SECRET,
+    getJwtSecret(),
     { expiresIn: '15m' }
   );
 };
@@ -13,7 +16,7 @@ const generateAccessToken = (user) => {
 const generateRefreshToken = (user) => {
   return jwt.sign(
     { id: user._id },
-    process.env.JWT_REFRESH_SECRET,
+    getRefreshSecret(),
     { expiresIn: '7d' }
   );
 };
