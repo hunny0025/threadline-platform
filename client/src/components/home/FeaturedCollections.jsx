@@ -11,7 +11,7 @@ const collections = [
     image:
       "https://images.unsplash.com/photo-1485230895905-ec40ba36b9bc?q=80&w=2069&auto=format&fit=crop",
     chips: ["32 pieces", "SS'25"],
-    swatches: ["#030213", "#d4183d", "#ececf0"],
+    swatches: ["#a43dff", "#ff3232", "#000055"],
     hero: true,
     shapes: [
       {
@@ -42,7 +42,7 @@ const collections = [
     image:
       "https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=2068&auto=format&fit=crop",
     chips: [],
-    swatches: ["#030213", "#ececf0"],
+    swatches: ["#c831ff", "#ececf0"],
     hero: false,
     shapes: [
       {
@@ -64,7 +64,29 @@ const collections = [
     image:
       "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop",
     chips: [],
-    swatches: ["#030213", "#d4183d"],
+    swatches: ["#b341ff", "#d4183d"],
+    hero: false,
+    shapes: [
+      { w: 50, h: 130, top: "18%", left: "20%", rotate: "-6deg", accent: true },
+      {
+        w: 70,
+        h: 70,
+        bottom: "28%",
+        right: "14%",
+        rotate: "0deg",
+        accent: false,
+      },
+    ],
+  },
+  {
+    id: 4,
+    name: "Dark Matter",
+    meta: "24 pieces",
+    badge: { label: "Hot", style: "warning" },
+    image:
+        "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=80&w=1000&auto=format&fit=crop",
+    chips: [],
+    swatches: ["#b341ff", "#d4183d"],
     hero: false,
     shapes: [
       { w: 50, h: 130, top: "18%", left: "20%", rotate: "-6deg", accent: true },
@@ -81,8 +103,8 @@ const collections = [
 ];
 
 const badgeStyles = {
-  default: { background: "#030213", color: "#fff" },
-  error: { background: "#fee2e2", color: "#991b1b" },
+  default: { background: "#b13df9", color: "#ffffff" },
+  error: { background: "#fee2e2", color: "#ff0000" },
   warning: { background: "#fef3c7", color: "#92400e" },
 };
 
@@ -177,7 +199,7 @@ function CollectionCard({ col, hovered, onEnter, onLeave }) {
           position: "absolute",
           inset: 0,
           background:
-            "linear-gradient(to top, rgba(3,2,19,0.82) 0%, rgba(3,2,19,0.1) 55%, transparent 100%)",
+            "linear-gradient(to top, rgba(0, 0, 0, 0.21) 0%, rgba(3,2,19,0.1) 55%, transparent 100%)",
           display: "flex",
           flexDirection: "column",
           justifyContent: "flex-end",

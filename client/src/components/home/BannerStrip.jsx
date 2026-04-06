@@ -11,7 +11,7 @@ export default function BannerStrip() {
   return (
     <div
       style={{
-        background: "#030213",
+        background: "#7c3aed",
         color: "#fff",
         padding: "10px 0",
         overflow: "hidden",
