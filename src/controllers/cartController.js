@@ -25,12 +25,12 @@ const getOrCreateCart = async (userId, sessionId) => {
 };
 
 // GET /cart
+// GET /cart
 exports.getCart = async (req, res) => {
   try {
     const userId = req.user?.id || null;
     const sessionId = req.headers['x-session-id'] || null;
 
-    // Required for test
     if (!userId && !sessionId) {
       return sendError(res, 'Session ID or auth token required', 400);
     }
