@@ -1,33 +1,26 @@
 import React, { useState, useEffect, useMemo, Suspense } from "react";
 import { useSearchParams } from "react-router-dom";
+import { PackageOpen } from "lucide-react";
 import { ProductGrid } from "../components/catalog/ProductGrid";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { ProductSkeleton } from "../components/catalog/ProductSkeleton";
 import { QuickLookPanel } from "../components/catalog/QuickLookPanel";
-import { useInfiniteScroll } from "../hooks/useInfiniteScroll";
 import { Breadcrumb } from "../components/ui/Breadcrumb";
+import { InlineError, EmptyState } from "../components/ui/ErrorBoundary";
+import { useProducts, useCategories } from "../hooks/useProducts";
 
+// ── Static filter definitions (kept client-side) ─────────────
 const FILTER_OPTIONS = {
-  size: ["XS", "S", "M", "L", "XL"],
-  color: ["Black", "White", "Olive", "Navy", "Sand"],
-  fabric: ["Cotton", "Linen", "Denim", "Wool", "Jersey"],
-  fit: ["Slim", "Regular", "Relaxed", "Oversized"],
-  occasion: ["Everyday", "Work", "Weekend", "Evening", "Travel"],
+  fitType: ["slim", "regular", "oversized"],
+  fabricWeight: ["light", "medium", "heavy"],
+  gender: ["men", "women", "unisex"],
+  occasion: ["casual", "formal", "party", "sports", "ethnic"],
 };
 
-const CATEGORY_OPTIONS = [
-  { slug: "tops", label: "Tops" },
-  { slug: "bottoms", label: "Bottoms" },
-  { slug: "dresses", label: "Dresses" },
-  { slug: "outerwear", label: "Outerwear" },
-  { slug: "accessories", label: "Accessories" },
-];
-
 const FILTER_TITLES = {
-  size: "Size",
-  color: "Color",
-  fabric: "Fabric",
-  fit: "Fit",
+  fitType: "Fit",
+  fabricWeight: "Fabric Weight",
+  gender: "Gender",
   occasion: "Occasion",
 };
 
@@ -46,69 +39,35 @@ const normalizeFilterValues = (key, values = []) => {
 
 const filtersToSearchParams = (filters, category) => {
   const params = new URLSearchParams();
-
-  if (category) {
-    params.set("category", category);
-  }
-
+  if (category) params.set("category", category);
   FILTER_KEYS.forEach((key) => {
-    filters[key].forEach((value) => {
-      params.append(key, value);
-    });
+    filters[key].forEach((value) => params.append(key, value));
   });
-
   return params;
 };
 
-const parseFiltersFromSearchParams = (searchParams) => {
-  return FILTER_KEYS.reduce((acc, key) => {
+const parseFiltersFromSearchParams = (searchParams) =>
+  FILTER_KEYS.reduce((acc, key) => {
     const rawValues = searchParams.getAll(key);
     const expandedValues =
       rawValues.length === 1 && rawValues[0].includes(",")
         ? rawValues[0].split(",")
         : rawValues;
-
     acc[key] = normalizeFilterValues(
       key,
-      expandedValues.map((value) => value.trim()).filter(Boolean),
+      expandedValues.map((v) => v.trim()).filter(Boolean),
     );
     return acc;
   }, buildInitialFilters());
-};
 
-const areFiltersEqual = (a, b) => {
-  return FILTER_KEYS.every((key) => {
-    if (a[key].length !== b[key].length) {
-      return false;
-    }
+const areFiltersEqual = (a, b) =>
+  FILTER_KEYS.every(
+    (key) =>
+      a[key].length === b[key].length &&
+      a[key].every((v) => b[key].includes(v)),
+  );
 
-    return a[key].every((value) => b[key].includes(value));
-  });
-};
-
-const getProductAttributes = (page, index) => {
-  const seed = (page - 1) * 12 + index;
-  const sizes = FILTER_OPTIONS.size.filter((_, i) => (seed + i) % 2 === 0);
-  // Pick 2-3 colors for this product
-  const colorStart = seed % FILTER_OPTIONS.color.length;
-  const colors = [
-    FILTER_OPTIONS.color[colorStart],
-    FILTER_OPTIONS.color[(colorStart + 1) % FILTER_OPTIONS.color.length],
-    ...(seed % 3 === 0
-      ? [FILTER_OPTIONS.color[(colorStart + 2) % FILTER_OPTIONS.color.length]]
-      : []),
-  ];
-
-  return {
-    color: FILTER_OPTIONS.color[seed % FILTER_OPTIONS.color.length],
-    colors,
-    fabric: FILTER_OPTIONS.fabric[seed % FILTER_OPTIONS.fabric.length],
-    fit: FILTER_OPTIONS.fit[seed % FILTER_OPTIONS.fit.length],
-    occasion: FILTER_OPTIONS.occasion[seed % FILTER_OPTIONS.occasion.length],
-    sizes: sizes.length > 0 ? sizes : ["M"],
-  };
-};
-
+// ── Filter sidebar section ──────────────────────────────────
 function FilterSection({ title, isOpen, onToggle, children }) {
   return (
     <section className="border-b border-zinc-200 py-4">
@@ -130,96 +89,75 @@ function FilterSection({ title, isOpen, onToggle, children }) {
   );
 }
 
-// Simulate an API call to fetch products
-const fetchProducts = async (page, numItems = 12) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const items = Array.from({ length: numItems }).map((_, i) => ({
-        ...getProductAttributes(page, i),
-        id: `prod-${page}-${i}`,
-        title: `Threadline Product ${page}-${i + 1}`,
-        price: (Math.random() * 100 + 20).toFixed(2),
-        image: `https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80`,
-        secondaryImage:
-          i % 2 !== 0
-            ? `https://images.unsplash.com/photo-1515347619362-e6fd0289eb13?w=800&q=80`
-            : null,
-        isNew: i % 4 === 0,
-        lowStock: i % 5 === 0,
-      }));
-      resolve(items);
-    }, 1500); // 1.5s delay to show loading skeletons
-  });
-};
-
+// ── Main catalogue content ──────────────────────────────────
 function CatalogGridContent() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [hasMore, setHasMore] = useState(true);
   const [selectedFilters, setSelectedFilters] = useState(() =>
     parseFiltersFromSearchParams(searchParams),
   );
   const [activeCategory, setActiveCategory] = useState(
     () => searchParams.get("category") || null,
   );
-  const [openSections, setOpenSections] = useState(() =>
-    FILTER_KEYS.reduce((acc, key) => {
-      acc[key] = true;
-      return acc;
-    }, {}),
-  );
+  const [openSections, setOpenSections] = useState(() => ({
+    category: true,
+    ...FILTER_KEYS.reduce((acc, k) => ({ ...acc, [k]: true }), {}),
+  }));
   const [quickLookProduct, setQuickLookProduct] = useState(null);
 
+  // ── Fetch categories from API ──────────────────────────
+  const {
+    categories,
+    isLoading: categoriesLoading,
+    isError: categoriesError,
+  } = useCategories();
+
+  // ── Build API query params ─────────────────────────────
+  const apiParams = useMemo(() => {
+    const params = { page, limit: 12 };
+    if (activeCategory) params.category = activeCategory;
+    // Only send the first selected value for each single-value filter
+    FILTER_KEYS.forEach((key) => {
+      if (selectedFilters[key].length > 0) {
+        params[key] = selectedFilters[key][0];
+      }
+    });
+    return params;
+  }, [page, activeCategory, selectedFilters]);
+
+  // ── Fetch products via SWR ─────────────────────────────
+  const {
+    products,
+    pagination,
+    isLoading,
+    isError,
+    error,
+    mutate,
+  } = useProducts(apiParams);
+
+  // ── Sync URL ↔ local state ─────────────────────────────
   useEffect(() => {
     const parsedFilters = parseFiltersFromSearchParams(searchParams);
     setSelectedFilters((prev) =>
       areFiltersEqual(prev, parsedFilters) ? prev : parsedFilters,
     );
-    const urlCategory = searchParams.get("category") || null;
-    setActiveCategory((prev) => (prev === urlCategory ? prev : urlCategory));
+    const urlCat = searchParams.get("category") || null;
+    setActiveCategory((prev) => (prev === urlCat ? prev : urlCat));
   }, [searchParams]);
 
   useEffect(() => {
     const nextParams = filtersToSearchParams(selectedFilters, activeCategory);
-    const nextQuery = nextParams.toString();
-    const currentQuery = searchParams.toString();
-
-    if (nextQuery !== currentQuery) {
+    if (nextParams.toString() !== searchParams.toString()) {
       setSearchParams(nextParams, { replace: true });
     }
   }, [selectedFilters, activeCategory, searchParams, setSearchParams]);
 
-  // Initial fetch
+  // Reset page when filters change
   useEffect(() => {
-    const loadInitial = async () => {
-      setLoading(true);
-      const initialProducts = await fetchProducts(1);
-      setProducts(initialProducts);
-      setLoading(false);
-    };
-    loadInitial();
-  }, []);
+    setPage(1);
+  }, [selectedFilters, activeCategory]);
 
-  const loadMore = async () => {
-    if (loading || !hasMore) return;
-    setLoading(true);
-    const newPage = page + 1;
-    const newProducts = await fetchProducts(newPage);
-
-    // Stop after 3 pages for demo
-    if (newPage >= 4) {
-      setHasMore(false);
-    }
-
-    setProducts((prev) => [...prev, ...newProducts]);
-    setPage(newPage);
-    setLoading(false);
-  };
-
-  const { loaderRef } = useInfiniteScroll(loadMore, hasMore);
-
+  // ── Filter helpers ─────────────────────────────────────
   const hasActiveFilters = useMemo(
     () =>
       FILTER_KEYS.some((key) => selectedFilters[key].length > 0) ||
@@ -227,70 +165,79 @@ function CatalogGridContent() {
     [selectedFilters, activeCategory],
   );
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      return FILTER_KEYS.every((key) => {
-        const selectedValues = selectedFilters[key];
-        if (selectedValues.length === 0) {
-          return true;
-        }
-
-        if (key === "size") {
-          return selectedValues.some((size) => product.sizes?.includes(size));
-        }
-
-        return selectedValues.includes(product[key]);
-      });
-    });
-  }, [products, selectedFilters]);
-
   const toggleFilter = (key, value) => {
     setSelectedFilters((prev) => {
-      const hasValue = prev[key].includes(value);
-      const nextValues = hasValue
-        ? prev[key].filter((item) => item !== value)
-        : [...prev[key], value];
-
+      const has = prev[key].includes(value);
       return {
         ...prev,
-        [key]: nextValues,
+        [key]: has
+          ? prev[key].filter((v) => v !== value)
+          : [...prev[key], value],
       };
     });
   };
 
-  const toggleSection = (key) => {
-    setOpenSections((prev) => ({
-      ...prev,
-      [key]: !prev[key],
-    }));
-  };
+  const toggleSection = (key) =>
+    setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const clearAllFilters = () => {
     setSelectedFilters(buildInitialFilters());
     setActiveCategory(null);
   };
 
-  const handleCategoryChange = (slug) => {
-    setActiveCategory((prev) => (prev === slug ? null : slug));
-  };
+  const handleCategoryChange = (id) =>
+    setActiveCategory((prev) => (prev === id ? null : id));
 
+  // Find active category label
   const activeCategoryLabel = useMemo(() => {
-    const found = CATEGORY_OPTIONS.find((c) => c.slug === activeCategory);
-    return found?.label || null;
-  }, [activeCategory]);
+    const found = categories.find((c) => c._id === activeCategory);
+    return found?.name || null;
+  }, [activeCategory, categories]);
 
   const breadcrumbItems = useMemo(() => {
     const items = [{ label: "Catalog", href: "/catalog" }];
-    if (activeCategoryLabel) {
-      items.push({ label: activeCategoryLabel });
-    }
+    if (activeCategoryLabel) items.push({ label: activeCategoryLabel });
     return items;
   }, [activeCategoryLabel]);
+
+  const hasMore = pagination
+    ? pagination.page < pagination.totalPages
+    : false;
+
+  // ── Map API product fields → card props ────────────────
+  const mappedProducts = useMemo(
+    () =>
+      products.map((p) => ({
+        id: p._id || p.id,
+        title: p.name,
+        price: p.basePrice?.toFixed(2) ?? "0.00",
+        image:
+          p.images?.[0] ||
+          "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80",
+        secondaryImage: p.images?.[1] || null,
+        isNew:
+          p.createdAt &&
+          Date.now() - new Date(p.createdAt).getTime() < 7 * 86400000,
+        lowStock: false,
+        sizes: p.variants
+          ? [...new Set(p.variants.map((v) => v.size))].filter(Boolean)
+          : [],
+        color: p.variants?.[0]?.color || null,
+        colors: p.variants
+          ? [...new Set(p.variants.map((v) => v.color))].filter(Boolean)
+          : [],
+        fabric: p.fabricWeight,
+        fit: p.fitType,
+        occasion: p.occasion,
+      })),
+    [products],
+  );
 
   return (
     <>
       <Breadcrumb items={breadcrumbItems} className="mb-6" />
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 xl:gap-12">
+        {/* ── Sidebar ───────────────────────────────────────── */}
         <aside className="lg:sticky lg:top-24 h-fit border border-zinc-200 rounded-xl p-5 bg-white">
           <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
             <h2 className="text-base font-semibold text-zinc-900 tracking-wide uppercase">
@@ -307,32 +254,46 @@ function CatalogGridContent() {
           </div>
 
           <div className="mt-2">
+            {/* Category filter (from API) */}
             <FilterSection
               title="Category"
               isOpen={openSections.category !== false}
               onToggle={() => toggleSection("category")}
             >
-              {CATEGORY_OPTIONS.map(({ slug, label }) => {
-                const isSelected = activeCategory === slug;
-
-                return (
-                  <button
-                    key={slug}
-                    type="button"
-                    onClick={() => handleCategoryChange(slug)}
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                      isSelected
-                        ? "bg-zinc-900 text-white border-zinc-900"
-                        : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
-                    }`}
-                    aria-pressed={isSelected}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+              {categoriesLoading ? (
+                <div className="flex gap-2">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="h-7 w-20 bg-zinc-100 rounded-full animate-pulse"
+                    />
+                  ))}
+                </div>
+              ) : categoriesError ? (
+                <p className="text-xs text-red-500">Failed to load categories</p>
+              ) : (
+                categories.map((cat) => {
+                  const isSelected = activeCategory === cat._id;
+                  return (
+                    <button
+                      key={cat._id}
+                      type="button"
+                      onClick={() => handleCategoryChange(cat._id)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        isSelected
+                          ? "bg-zinc-900 text-white border-zinc-900"
+                          : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
+                      }`}
+                      aria-pressed={isSelected}
+                    >
+                      {cat.name}
+                    </button>
+                  );
+                })
+              )}
             </FilterSection>
 
+            {/* Attribute filters */}
             {FILTER_KEYS.map((key) => (
               <FilterSection
                 key={key}
@@ -342,13 +303,12 @@ function CatalogGridContent() {
               >
                 {FILTER_OPTIONS[key].map((value) => {
                   const isSelected = selectedFilters[key].includes(value);
-
                   return (
                     <button
                       key={value}
                       type="button"
                       onClick={() => toggleFilter(key, value)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors capitalize ${
                         isSelected
                           ? "bg-zinc-900 text-white border-zinc-900"
                           : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
@@ -364,46 +324,89 @@ function CatalogGridContent() {
           </div>
         </aside>
 
+        {/* ── Product Grid ──────────────────────────────────── */}
         <div className="flex flex-col gap-8">
-          {hasActiveFilters && (
+          {hasActiveFilters && !isLoading && (
             <p className="text-sm text-zinc-600">
-              Showing {filteredProducts.length} result
-              {filteredProducts.length === 1 ? "" : "s"} based on your filters.
+              Showing {mappedProducts.length} result
+              {mappedProducts.length === 1 ? "" : "s"} based on your filters.
+              {pagination && (
+                <span className="text-zinc-400 ml-1">
+                  (Page {pagination.page} of {pagination.totalPages})
+                </span>
+              )}
             </p>
           )}
 
-          <ProductGrid>
-            {filteredProducts.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onQuickLook={setQuickLookProduct}
-              />
-            ))}
-
-            {loading &&
-              Array.from({ length: 4 }).map((_, i) => (
-                <ProductSkeleton key={`skeleton-${i}`} />
-              ))}
-          </ProductGrid>
-
-          {!loading && filteredProducts.length === 0 && (
-            <div className="border border-dashed border-zinc-300 rounded-xl p-8 text-center text-zinc-600">
-              No products match the selected filters. Try removing one or two
-              filters.
-            </div>
+          {/* SWR Error */}
+          {isError && (
+            <InlineError error={error} onRetry={() => mutate()} />
           )}
 
-          <div
-            ref={loaderRef}
-            className="h-10 w-full flex items-center justify-center text-zinc-500"
-          >
-            {loading
-              ? "Loading more items..."
-              : hasMore
-                ? "Scroll down for more"
-                : "You have reached the end."}
-          </div>
+          {/* Product grid */}
+          {!isError && (
+            <ProductGrid>
+              {mappedProducts.map((product) => (
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  onQuickLook={setQuickLookProduct}
+                />
+              ))}
+
+              {/* Loading skeletons */}
+              {isLoading &&
+                Array.from({ length: 8 }).map((_, i) => (
+                  <ProductSkeleton key={`skeleton-${i}`} />
+                ))}
+            </ProductGrid>
+          )}
+
+          {/* Empty state */}
+          {!isLoading && !isError && mappedProducts.length === 0 && (
+            <EmptyState
+              icon={PackageOpen}
+              title="No products found"
+              description={
+                hasActiveFilters
+                  ? "No products match the selected filters. Try removing one or two filters."
+                  : "We're still adding products to this collection. Check back soon!"
+              }
+              action={
+                hasActiveFilters ? (
+                  <button
+                    onClick={clearAllFilters}
+                    className="text-sm font-medium text-violet-600 hover:text-violet-800 underline transition-colors"
+                  >
+                    Clear all filters
+                  </button>
+                ) : null
+              }
+            />
+          )}
+
+          {/* Pagination */}
+          {!isError && pagination && pagination.totalPages > 1 && (
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <button
+                disabled={page <= 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                className="px-4 py-2 rounded-lg border border-zinc-300 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Previous
+              </button>
+              <span className="text-sm text-zinc-500 px-3">
+                Page {pagination.page} of {pagination.totalPages}
+              </span>
+              <button
+                disabled={!hasMore}
+                onClick={() => setPage((p) => p + 1)}
+                className="px-4 py-2 rounded-lg border border-zinc-300 text-sm font-medium text-zinc-700 hover:bg-zinc-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Quick Look Panel */}
@@ -417,6 +420,7 @@ function CatalogGridContent() {
   );
 }
 
+// ── Page wrapper ────────────────────────────────────────────
 export function Catalog() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-16">
@@ -430,7 +434,6 @@ export function Catalog() {
         </p>
       </div>
 
-      {/* Suspense Boundary wrapping the Product Grid */}
       <Suspense
         fallback={
           <div className="flex flex-col gap-8">
