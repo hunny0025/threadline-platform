@@ -25,14 +25,14 @@ const {
   removeFromCart,
   mergeCart,
 } = require('../controllers/cartController');
+
 const { validate } = require('../middleware/validation');
 
-// Validation rules
+// ✅ SIMPLE validation (NO MongoId strict check)
 const variantIdValidation = [
-  body('variantId')
-    .notEmpty()
-    .withMessage('variantId is required'),
+  body('variantId').notEmpty().withMessage('variantId required'),
 ];
+
 const quantityValidation = [
   body('quantity')
     .optional()
@@ -40,10 +40,20 @@ const quantityValidation = [
     .withMessage('Quantity must be 0-99'),
 ];
 
+// ✅ IMPORTANT: NO validate() on GET
 router.get('/', optionalAuth, getCart);
+
+// ✅ Apply validation ONLY where needed
 router.post('/add', optionalAuth, variantIdValidation, validate, addToCart);
 router.patch('/update', optionalAuth, [...variantIdValidation, ...quantityValidation], validate, updateCart);
 router.delete('/remove', optionalAuth, variantIdValidation, validate, removeFromCart);
-router.post('/merge', auth, body('sessionId').notEmpty().withMessage('sessionId required'), validate, mergeCart);
+
+router.post(
+  '/merge',
+  auth,
+  body('sessionId').notEmpty().withMessage('sessionId required'),
+  validate,
+  mergeCart
+);
 
 module.exports = router;
