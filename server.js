@@ -71,5 +71,5 @@ const startServer = async () => {
     process.exit(1);
   }
 };
-
-startServer();
+console.log("ENV:", process.env.NODE_ENV);
+startServer();

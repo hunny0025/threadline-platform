@@ -1,11 +1,26 @@
 const express = require('express');
 const router = express.Router();
+const { body } = require('express-validator');
 const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
 const { register, login, refresh, logout } = require('../controllers/authController');
+const { authLimiter, passwordResetLimiter } = require('../middleware/authRateLimiter');
+const { validate } = require('../middleware/validation');
 
-router.post('/register', register);
-router.post('/login', login);
+// Validation rules
+const registerValidation = [
+  body('name').trim().isLength({ min: 2, max: 50 }).withMessage('Name must be 2-50 characters'),
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+];
+
+const loginValidation = [
+  body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
+  body('password').notEmpty().withMessage('Password required'),
+];
+
+router.post('/register', authLimiter, registerValidation, validate, register);
+router.post('/login', authLimiter, loginValidation, validate, login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
 

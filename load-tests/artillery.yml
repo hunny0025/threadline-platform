@@ -1,0 +1,84 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - name: "Warmup"
+      duration: 10
+      arrivalRate: 5
+      rampTo: 20
+    - name: "Sustained load"
+      duration: 60
+      arrivalRate: 20
+      rampTo: 80
+    - name: "Peak load"
+      duration: 30
+      arrivalRate: 80
+    - name: "Cooldown"
+      duration: 20
+      arrivalRate: 5
+  plugins:
+    expect: {}
+  defaults:
+    headers:
+      User-Agent: "Artillery/LoadTest"
+    timeout: 10000
+
+scenarios:
+  - name: "Product listing"
+    weight: 4
+    flow:
+      - get:
+          url: "/api/v1/products"
+          capture:
+            - json: "$.data"
+              as: "products"
+          check:
+            - status: 200
+            - contentType: json
+
+  - name: "Product listing with filters"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/v1/products?category=tops&gender=male&limit=20"
+          check:
+            - status: 200
+
+  - name: "Product detail"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/v1/products/6782d72c8f3a9c0012a34b56"
+          check:
+            - status: 200
+
+  - name: "Search: shirt"
+    weight: 2
+    flow:
+      - get:
+          url: "/api/v1/search?q=shirt"
+          check:
+            - status: 200
+
+  - name: "Search: jeans"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/v1/search?q=jeans"
+          check:
+            - status: 200
+
+  - name: "Categories"
+    weight: 1
+    flow:
+      - get:
+          url: "/api/v1/categories"
+          check:
+            - status: 200
+
+  - name: "Health check"
+    weight: 1
+    flow:
+      - get:
+          url: "/health"
+          check:
+            - status: 200

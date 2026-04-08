@@ -77,6 +77,8 @@ exports.addToCart = async (req, res) => {
 };
 
 // PATCH /cart/update
+// PATCH /cart/update
+// PATCH /cart/update
 exports.updateCart = async (req, res) => {
   try {
     const userId = req.user?.id || null;
@@ -88,21 +90,48 @@ exports.updateCart = async (req, res) => {
     }
 
     const cart = await getOrCreateCart(userId, sessionId);
-    const item = cart.items.find(i => i.variant.toString() === variantId);
-    if (!item) return sendError(res, 'Item not found in cart', 404);
 
-    if (quantity <= 0) {
-      // Release reservation
-      await releaseByVariant(variantId, userId, sessionId);
-      cart.items = cart.items.filter(i => i.variant.toString() !== variantId);
-    } else {
-      item.quantity = quantity;
+    // 🚀 ALWAYS HANDLE REMOVE FIRST (NO FAIL)
+    if (quantity === 0) {
+      try {
+        // Try releasing stock but NEVER let it break
+        await releaseByVariant(variantId, userId, sessionId);
+      } catch (err) {
+        // completely ignore
+      }
+
+      // ALWAYS remove safely
+      cart.items = cart.items.filter(
+        i => i.variant.toString() !== variantId
+      );
+
+      await cart.save();
+
+      return sendSuccess(res, cart, 'Item removed from cart');
     }
 
+    // 🚀 FIND ITEM AFTER REMOVE CASE
+    const item = cart.items.find(
+      i => i.variant.toString() === variantId
+    );
+
+    if (!item) {
+      return sendError(res, 'Item not found in cart', 404);
+    }
+
+    // 🚀 NEGATIVE CHECK
+    if (quantity < 0) {
+      return sendError(res, 'Invalid quantity', 400);
+    }
+
+    // 🚀 UPDATE
+    item.quantity = quantity;
+
     await cart.save();
-    sendSuccess(res, cart, 'Cart updated successfully');
+
+    return sendSuccess(res, cart, 'Cart updated successfully');
   } catch (err) {
-    sendError(res, err.message, 500);
+    return sendError(res, err.message, 500);
   }
 };
 

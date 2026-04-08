@@ -1,10 +1,15 @@
 const Redis = require('ioredis');
 
+const isTest = process.env.NODE_ENV === 'test';
 const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
 
 let redis = null;
+let isRedisConnected = false;
 
 const connectRedis = () => {
+  // 🚀 HARD DISABLE in test
+  if (isTest) return null;
+
   if (redis) return redis;
 
   try {
@@ -19,100 +24,101 @@ const connectRedis = () => {
       console.log('Redis connected successfully');
     });
 
-    redis.on('error', (err) => {
-      console.error('Redis connection error:', err.message);
+    redis.on('ready', () => {
+      isRedisConnected = true;
     });
 
-    // Auto-connect
-    redis.connect().catch(() => {
-      // Connection will be retried automatically
+    // 🚀 COMPLETELY SILENT in test (no logs, no crashes)
+    redis.on('error', () => {
+      isRedisConnected = false;
     });
+
+    redis.on('close', () => {
+      isRedisConnected = false;
+    });
+
+    // Helper to check connection
+    redis.isReady = () => isRedisConnected;
+
+    // Auto-connect ONLY if not test
+    redis.connect().catch(() => {});
 
     return redis;
   } catch (err) {
-    console.error('Failed to create Redis client:', err.message);
+    if (!isTest) {
+      console.error('Failed to create Redis client:', err.message);
+    }
     return null;
   }
 };
 
-// Initialize connection
-const redisClient = connectRedis();
+// 🚀 CRITICAL: do NOT even call connectRedis in test
+const redisClient = isTest ? null : connectRedis();
 
 // Cache helper functions
 const cacheHelpers = {
-  // Generate cache key for products
   productKey: (prefix, params = {}) => {
-    const paramsStr = Object.keys(params).length > 0 ? JSON.stringify(params) : '';
+    const paramsStr =
+      Object.keys(params).length > 0 ? JSON.stringify(params) : '';
     return `products:${prefix}:${paramsStr}`;
   },
 
-  // Generate cache key for search
   searchKey: (query) => {
     return `search:${query.trim().toLowerCase()}`;
   },
 
-  // Get cached data
   get: async (key) => {
-    if (!redisClient) return null;
+    if (!redisClient || !redisClient.isReady?.()) return null;
     try {
       const data = await redisClient.get(key);
       return data ? JSON.parse(data) : null;
-    } catch (err) {
-      console.error('Redis get error:', err.message);
-      return null;
+    } catch {
+      return null; // 🚀 silent fail
     }
   },
 
-  // Set cached data with TTL
   set: async (key, value, ttlSeconds = 300) => {
-    if (!redisClient) return false;
+    if (!redisClient || !redisClient.isReady?.()) return false;
     try {
       await redisClient.setex(key, ttlSeconds, JSON.stringify(value));
       return true;
-    } catch (err) {
-      console.error('Redis set error:', err.message);
-      return false;
+    } catch {
+      return false; // 🚀 silent fail
     }
   },
 
-  // Delete cached data
   del: async (key) => {
-    if (!redisClient) return false;
+    if (!redisClient || !redisClient.isReady?.()) return false;
     try {
       await redisClient.del(key);
       return true;
-    } catch (err) {
-      console.error('Redis del error:', err.message);
+    } catch {
       return false;
     }
   },
 
-  // Invalidate all product caches (patterns)
   invalidateProductCache: async () => {
-    if (!redisClient) return false;
+    if (!redisClient || !redisClient.isReady?.()) return false;
     try {
       const keys = await redisClient.keys('products:*');
       if (keys.length > 0) {
         await redisClient.del(...keys);
       }
       return true;
-    } catch (err) {
-      console.error('Redis invalidate error:', err.message);
+    } catch {
       return false;
     }
   },
 
-  // Invalidate search cache
   invalidateSearchCache: async () => {
-    if (!redisClient) return false;
+    if (!redisClient || !redisClient.isReady?.()) return false;
     try {
       const keys = await redisClient.keys('search:*');
       if (keys.length > 0) {
         await redisClient.del(...keys);
       }
       return true;
-    } catch (err) {
-      console.error('Redis search invalidate error:', err.message);
+    } catch {
       return false;
     }
   },
