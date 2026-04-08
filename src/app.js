@@ -5,7 +5,7 @@ const session = require('express-session');
 const passport = require('./config/passport');
 const corsMiddleware = require('./middleware/cors');
 const rateLimiter = require('./middleware/rateLimiter');
-const authRateLimiter = require('./middleware/authRateLimiter');
+const { authLimiter } = require('./middleware/authRateLimiter');
 const errorHandler = require('./middleware/errorHandler');
 const routes = require('./routes');
 const swaggerUi = require('swagger-ui-express');
@@ -124,6 +124,10 @@ const swaggerDoc = YAML.load(path.join(__dirname, 'docs/swagger.yaml'));
 app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDoc));
 
 // Routes
+// Apply auth rate limiter
+app.use('/api/v1/auth', authLimiter);
+
+// All routes
 app.use('/api/v1', routes);
 
 // Finalize Sentry if DSN is present (Task 8)

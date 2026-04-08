@@ -4,7 +4,7 @@ const { body } = require('express-validator');
 const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
 const { register, login, refresh, logout } = require('../controllers/authController');
-const { authLimiter, passwordResetLimiter } = require('../middleware/authRateLimiter');
+const { authLimiter } = require('../middleware/authRateLimiter');
 const { validate } = require('../middleware/validation');
 
 // Validation rules
