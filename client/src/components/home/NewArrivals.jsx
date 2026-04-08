@@ -133,15 +133,7 @@ function ProductCard({ product }) {
             transition: `transform 0.5s ${EASE}`,
           }}
         >
-          <div
-            style={{
-              width: "50px",
-              height: "74px",
-              borderRadius: "8px",
-              background: product.shapeColor,
-              border: "0.5px solid rgba(255,255,255,0.2)",
-            }}
-          />
+          
         </div>
 
         <div style={{ position: "absolute", top: "7px", left: "7px" }}>

@@ -51,3 +51,10 @@ export type {
   PageWrapperProps,
   PageTransitionPreset,
 } from "./PageTransition";
+
+export {
+  ErrorBoundary,
+  ErrorFallback,
+  InlineError,
+  EmptyState,
+} from "./ErrorBoundary";

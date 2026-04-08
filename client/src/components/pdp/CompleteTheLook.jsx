@@ -1,56 +1,43 @@
 import React, { useState, useEffect } from 'react';
 import { ShoppingBag, ChevronRight, ChevronLeft } from 'lucide-react';
 import { ProductMiniCard } from './ProductMiniCard';
+import { useRecommendations } from '../../hooks/useProducts';
 
-// Mock data generator for recommendations
-const SIZE_OPTIONS  = ['XS', 'S', 'M', 'L', 'XL'];
-const COLOR_OPTIONS = ['Black', 'White', 'Olive', 'Navy', 'Sand'];
-
-function generateRecommendations(baseId) {
-  // Generate a few stable but varied products based on baseId
-  const seed = baseId ? baseId.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) : 42;
-  
-  const recommendations = [];
-  for (let i = 1; i <= 5; i++) {
-    const rSeed = seed + i * 13;
-    recommendations.push({
-      id: `rec-${rSeed}`,
-      title: `Threadline Essential ${['T-Shirt', 'Chino', 'Jacket', 'Sweater', 'Sock'][rSeed % 5]}`,
-      price: (Math.abs(rSeed * 7) % 180 + 45).toFixed(2),
-      image: [
-        'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=800&q=80',
-        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80',
-        'https://images.unsplash.com/photo-1515347619362-e6fd0289eb13?w=800&q=80',
-        'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=800&q=80',
-        'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80',
-      ][rSeed % 5],
-      sizes: ['M', 'L'], // default sizes for mock
-      color: COLOR_OPTIONS[rSeed % COLOR_OPTIONS.length],
-    });
-  }
-  return recommendations;
+/**
+ * Map API recommendation data into the shape ProductMiniCard expects.
+ */
+function mapRecommendation(item) {
+  return {
+    id: item._id || item.id,
+    title: item.name || 'Product',
+    price: item.basePrice?.toFixed(2) ?? '0.00',
+    image:
+      item.images?.[0] ||
+      'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=800&q=80',
+    sizes: ['M', 'L'],
+    color: null,
+  };
 }
 
 export function CompleteTheLook({ productId }) {
-  const [recommendations, setRecommendations] = useState([]);
+  // Fetch recommendations from API
+  const { recommendations: apiRecs, isLoading, isError } = useRecommendations(productId);
+
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [scrollContainer, setScrollContainer] = useState(null);
 
+  // Map API data
+  const recommendations = apiRecs.map(mapRecommendation);
+
+  // Default-select all when data arrives
   useEffect(() => {
-    // Simulate API fetch
-    const fetchRecs = async () => {
-      // simulate network delay
-      await new Promise(resolve => setTimeout(resolve, 300));
-      const data = generateRecommendations(productId);
-      setRecommendations(data);
-      // default select all
-      setSelectedIds(new Set(data.map(item => item.id)));
-    };
-    fetchRecs();
-  }, [productId]);
+    if (recommendations.length > 0) {
+      setSelectedIds(new Set(recommendations.map((item) => item.id)));
+    }
+  }, [apiRecs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggleSelection = (id) => {
-    setSelectedIds(prev => {
+    setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
         next.delete(id);
@@ -63,29 +50,46 @@ export function CompleteTheLook({ productId }) {
 
   const handleAddSelectedToCart = () => {
     if (selectedIds.size === 0) return;
-    const selectedProducts = recommendations.filter(p => selectedIds.has(p.id));
-    console.log("🛒 Added multiple items to cart:", selectedProducts.map(p => p.title));
-    // Here you would typically dispatch to a global cart store Context/Redux
+    const selected = recommendations.filter((p) => selectedIds.has(p.id));
+    console.log(
+      '🛒 Added multiple items to cart:',
+      selected.map((p) => p.title),
+    );
   };
 
-  const scrollLeft = () => {
-    if (scrollContainer) {
-      scrollContainer.scrollBy({ left: -300, behavior: 'smooth' });
-    }
-  };
+  const scrollLeft = () =>
+    scrollContainer?.scrollBy({ left: -300, behavior: 'smooth' });
 
-  const scrollRight = () => {
-    if (scrollContainer) {
-      scrollContainer.scrollBy({ left: 300, behavior: 'smooth' });
-    }
-  };
+  const scrollRight = () =>
+    scrollContainer?.scrollBy({ left: 300, behavior: 'smooth' });
 
-  if (recommendations.length === 0) {
-    return null; // or a skeleton loader
+  // ── Loading state ─────────────────────────────────────────
+  if (isLoading) {
+    return (
+      <section className="mt-12 lg:mt-20 border-t border-zinc-200 pt-8 lg:pt-12">
+        <div className="mb-6">
+          <div className="h-7 w-52 bg-zinc-100 rounded animate-pulse mb-2" />
+          <div className="h-4 w-80 bg-zinc-50 rounded animate-pulse" />
+        </div>
+        <div className="flex gap-4 sm:gap-6 overflow-hidden pb-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div
+              key={i}
+              className="flex-shrink-0 w-[170px] sm:w-[200px] aspect-[3/4] bg-zinc-100 rounded-xl animate-pulse"
+            />
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  // Don't render if there are no recommendations or there was an error
+  if (isError || recommendations.length === 0) {
+    return null;
   }
 
   const selectedTotal = recommendations
-    .filter(p => selectedIds.has(p.id))
+    .filter((p) => selectedIds.has(p.id))
     .reduce((sum, p) => sum + parseFloat(p.price), 0);
 
   return (
@@ -99,17 +103,17 @@ export function CompleteTheLook({ productId }) {
             Style it with these hand-picked recommendations to elevate your outfit.
           </p>
         </div>
-        
+
         {/* Desktop Navigation Arrows */}
         <div className="hidden md:flex items-center gap-2">
-          <button 
+          <button
             onClick={scrollLeft}
             className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 hover:border-zinc-300 transition-colors"
             aria-label="Scroll left"
           >
             <ChevronLeft size={20} />
           </button>
-          <button 
+          <button
             onClick={scrollRight}
             className="w-10 h-10 rounded-full border border-zinc-200 flex items-center justify-center text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 hover:border-zinc-300 transition-colors"
             aria-label="Scroll right"
@@ -120,17 +124,19 @@ export function CompleteTheLook({ productId }) {
       </div>
 
       {/* Horizontal Scroll Strip */}
-      <div 
+      <div
         ref={setScrollContainer}
         className="flex gap-4 sm:gap-6 overflow-x-auto snap-x snap-mandatory pb-6 px-1 hide-scrollbar"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <style dangerouslySetInnerHTML={{__html: `
-          .hide-scrollbar::-webkit-scrollbar { display: none; }
-        `}} />
-        
-        {recommendations.map(product => (
-          <ProductMiniCard 
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `.hide-scrollbar::-webkit-scrollbar { display: none; }`,
+          }}
+        />
+
+        {recommendations.map((product) => (
+          <ProductMiniCard
             key={product.id}
             product={product}
             isSelected={selectedIds.has(product.id)}
@@ -146,18 +152,22 @@ export function CompleteTheLook({ productId }) {
             {selectedIds.size} {selectedIds.size === 1 ? 'item' : 'items'} selected
           </p>
           <p className="text-zinc-500 text-sm mt-0.5">
-            Total: <span className="text-zinc-900 font-medium">${selectedTotal.toFixed(2)}</span>
+            Total:{' '}
+            <span className="text-zinc-900 font-medium">
+              ${selectedTotal.toFixed(2)}
+            </span>
           </p>
         </div>
-        
+
         <button
           onClick={handleAddSelectedToCart}
           disabled={selectedIds.size === 0}
           className={`
             w-full sm:w-auto px-6 py-3 rounded-xl font-medium tracking-wide transition-all duration-200 flex items-center justify-center gap-2
-            ${selectedIds.size > 0 
-              ? 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-md enabled:active:scale-[0.98]' 
-              : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+            ${
+              selectedIds.size > 0
+                ? 'bg-zinc-900 text-white hover:bg-zinc-800 shadow-md enabled:active:scale-[0.98]'
+                : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
             }
           `}
         >
