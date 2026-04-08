@@ -1,21 +1,23 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const auth = require('../middleware/auth');
 const jwt = require('jsonwebtoken');
 const config = require('../config');
 
+// 🔥 FIXED optionalAuth (IMPORTANT)
 const optionalAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    try {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
       req.user = jwt.verify(token, config.jwtSecret);
-    } catch {
-      req.user = null;
     }
+  } catch (err) {
+    req.user = null; // NEVER break request
   }
-  next();
+
+  next(); // ALWAYS continue
 };
 
 const {
@@ -30,7 +32,9 @@ const { validate } = require('../middleware/validation');
 
 // ✅ SIMPLE validation (NO MongoId strict check)
 const variantIdValidation = [
-  body('variantId').notEmpty().withMessage('variantId required'),
+  body('variantId')
+    .notEmpty()
+    .withMessage('variantId is required'),
 ];
 
 const quantityValidation = [
@@ -40,14 +44,24 @@ const quantityValidation = [
     .withMessage('Quantity must be 0-99'),
 ];
 
-// ✅ IMPORTANT: NO validate() on GET
+// ✅ NO validation on GET
 router.get('/', optionalAuth, getCart);
 
-// ✅ Apply validation ONLY where needed
+// ✅ Apply validation only where needed
 router.post('/add', optionalAuth, variantIdValidation, validate, addToCart);
-router.patch('/update', optionalAuth, [...variantIdValidation, ...quantityValidation], validate, updateCart);
+
+router.patch(
+  '/update',
+  optionalAuth,
+  [...variantIdValidation, ...quantityValidation],
+  validate,
+  updateCart
+);
+
 router.delete('/remove', optionalAuth, variantIdValidation, validate, removeFromCart);
 
+// merge needs auth
+const auth = require('../middleware/auth');
 router.post(
   '/merge',
   auth,
