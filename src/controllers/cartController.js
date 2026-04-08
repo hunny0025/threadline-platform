@@ -30,7 +30,7 @@ exports.getCart = async (req, res) => {
     const userId = req.user?.id || null;
     const sessionId = req.headers['x-session-id'] || null;
 
-    // ✅ REQUIRED FIX (test expects this)
+    // Required for test
     if (!userId && !sessionId) {
       return sendError(res, 'Session ID or auth token required', 400);
     }
@@ -98,11 +98,12 @@ exports.updateCart = async (req, res) => {
 
     const cart = await getOrCreateCart(userId, sessionId);
 
-    // ✅ REMOVE CASE
     if (quantity === 0) {
       try {
         await releaseByVariant(variantId, userId, sessionId);
-      } catch {}
+      } catch (err) {
+        console.error('Release failed:', err.message);
+      }
 
       cart.items = cart.items.filter(
         i => i.variant.toString() !== variantId
@@ -146,7 +147,9 @@ exports.removeFromCart = async (req, res) => {
 
     try {
       await releaseByVariant(variantId, userId, sessionId);
-    } catch {}
+    } catch (err) {
+      console.error('Release failed:', err.message);
+    }
 
     const cart = await getOrCreateCart(userId, sessionId);
 
