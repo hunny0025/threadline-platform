@@ -29,7 +29,9 @@ const { validate } = require('../middleware/validation');
 
 // Validation rules
 const variantIdValidation = [
-  body('variantId').isMongoId().withMessage('Valid variant ID required'),
+  body('variantId')
+    .notEmpty()
+    .withMessage('variantId is required'),
 ];
 const quantityValidation = [
   body('quantity')
