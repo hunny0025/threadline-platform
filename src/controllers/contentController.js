@@ -38,7 +38,8 @@ exports.getContent = async (req, res) => {
     }, 'Content fetched successfully');
 
   } catch (err) {
-    sendError(res, err.message, 500);
+  console.error('[Content] error:', err);
+  sendError(res, 'Something went wrong. Please try again.', 500);
   }
 };
 
@@ -75,6 +76,7 @@ exports.updateContent = async (req, res) => {
     sendSuccess(res, content, 'Content updated successfully');
 
   } catch (err) {
-    sendError(res, err.message, 500);
+      console.error('[Content] error:', err);
+      sendError(res, 'Something went wrong. Please try again.', 500);
   }
 };
