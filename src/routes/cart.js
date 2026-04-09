@@ -1,20 +1,23 @@
 const express = require('express');
 const router = express.Router();
-const auth = require('../middleware/auth');
+const { body } = require('express-validator');
 const jwt = require('jsonwebtoken');
-const getJwtSecret = () => process.env.JWT_SECRET || 'test_jwt_secret_fallback';
+const config = require('../config');
 
+// 🔥 FIXED optionalAuth (IMPORTANT)
 const optionalAuth = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    try {
+  try {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      req.user = jwt.verify(token, getJwtSecret());
-    } catch {
-      req.user = null;
+      req.user = jwt.verify(token, config.jwtSecret);
     }
+  } catch (err) {
+    req.user = null; // NEVER break request
   }
-  next();
+
+  next(); // ALWAYS continue
 };
 
 const {
@@ -25,10 +28,46 @@ const {
   mergeCart,
 } = require('../controllers/cartController');
 
+const { validate } = require('../middleware/validation');
+
+// ✅ SIMPLE validation (NO MongoId strict check)
+const variantIdValidation = [
+  body('variantId')
+    .notEmpty()
+    .withMessage('variantId is required'),
+];
+
+const quantityValidation = [
+  body('quantity')
+    .optional()
+    .isInt({ min: 0, max: 99 }) // ✅ allow 0
+    .withMessage('Quantity must be 0-99'),
+];
+
+// ✅ NO validation on GET
 router.get('/', optionalAuth, getCart);
-router.post('/add', optionalAuth, addToCart);
-router.patch('/update', optionalAuth, updateCart);
-router.delete('/remove', optionalAuth, removeFromCart);
-router.post('/merge', auth, mergeCart);
+
+// ✅ Apply validation only where needed
+router.post('/add', optionalAuth, variantIdValidation, validate, addToCart);
+
+router.patch(
+  '/update',
+  optionalAuth,
+  [...variantIdValidation, ...quantityValidation],
+  validate,
+  updateCart
+);
+
+router.delete('/remove', optionalAuth, variantIdValidation, validate, removeFromCart);
+
+// merge needs auth
+const auth = require('../middleware/auth');
+router.post(
+  '/merge',
+  auth,
+  body('sessionId').notEmpty().withMessage('sessionId required'),
+  validate,
+  mergeCart
+);
 
 module.exports = router;

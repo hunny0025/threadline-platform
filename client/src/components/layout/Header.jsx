@@ -15,7 +15,7 @@ export function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isCartOpen, setIsCartOpen] = useState(false);
-  
+
   // Mock Cart State
   const [cartItems, setCartItems] = useState([
     {
@@ -44,15 +44,14 @@ export function Header() {
     if (newQuantity < 1) return;
     setCartItems((prev) =>
       prev.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
+        item.id === id ? { ...item, quantity: newQuantity } : item,
+      ),
     );
   };
 
   const removeItem = (id) => {
     setCartItems((prev) => prev.filter((item) => item.id !== id));
   };
-
 
   // Auth handlers
   const openLogin = () => {
@@ -209,17 +208,17 @@ export function Header() {
             </nav>
 
             {/* Actions */}
-            <div className="flex-1 flex items-center justify-end space-x-4">
+            <div className="flex-1 flex items-center justify-end space-x-3">
               {/* Search Button */}
               <button
                 onClick={openSearch}
-                className="relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
+                className="relative p-1.5 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
               >
                 <span className="sr-only">Search</span>
-                <Search className="h-5 w-5" />
+                <Search className="h-4 w-4" />
               </button>
 
-              <button 
+              <button
                 onClick={() => setIsCartOpen(true)}
                 className="relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
               >
@@ -249,22 +248,23 @@ export function Header() {
               {/* Sign In Button */}
               <Button
                 size="sm"
-                variant="secondary"
                 onClick={openLogin}
-                className="hidden sm:flex"
+                className="hidden sm:inline-flex"
               >
-                <User className="mr-1.5 h-4 w-4" />
+                <User className="mr-1 h-3.5 w-3.5" />
                 Sign In
               </Button>
 
               {/* Mobile Sign In Icon */}
-              <button
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={openLogin}
-                className="sm:hidden relative p-2 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
+                className="sm:hidden p-1.5"
               >
                 <span className="sr-only">Sign In</span>
-                <User className="h-5 w-5" />
-              </button>
+                <User className="h-4 w-4" />
+              </Button>
             </div>
           </div>
         </div>
@@ -292,7 +292,7 @@ export function Header() {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: [0.43, 0.13, 0.23, 0.96] }}
             >
-              <div className="max-w-4xl mx-200 px-4 sm:px-6 lg:px-8 py-6">
+              <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                   <h2 className="text-lg font-display font-semibold text-zinc-900">
@@ -360,7 +360,7 @@ export function Header() {
       />
 
       {/* Cart Drawer */}
-      <CartDrawer 
+      <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cartItems={cartItems}

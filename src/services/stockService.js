@@ -8,16 +8,16 @@ exports.reserveStock = async (variantId, quantity, userId, sessionId) => {
   const variant = await ProductVariant.findById(variantId);
   if (!variant) throw new Error('Variant not found');
 
-  const available = variant.stock - variant.reserved;
+  const reserved = variant.reserved || 0;
+  const available = variant.stock - reserved;
   if (available < quantity) {
     throw new Error(`Only ${available} units available`);
   }
 
-  // Atomically increment reserved
   const updated = await ProductVariant.findOneAndUpdate(
     {
       _id: variantId,
-      $expr: { $gte: [{ $subtract: ['$stock', '$reserved'] }, quantity] },
+      $expr: { $gte: [{ $subtract: ['$stock', { $ifNull: ['$reserved', 0] }] }, quantity] },
     },
     { $inc: { reserved: quantity } },
     { new: true }
@@ -70,14 +70,12 @@ exports.releaseByVariant = async (variantId, userId, sessionId) => {
 
 // Atomically decrement stock on order creation
 exports.decrementOnOrder = async (variantId, quantity, userId, sessionId) => {
-  // Release reservation first
   const query = { variantId };
   if (userId) query.userId = userId;
   else if (sessionId) query.sessionId = sessionId;
 
   const reservation = await StockReservation.findOne(query);
 
-  // Atomically decrement stock and release reserved
   const updated = await ProductVariant.findOneAndUpdate(
     {
       _id: variantId,

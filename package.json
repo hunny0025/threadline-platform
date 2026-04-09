@@ -8,7 +8,7 @@
         "start": "node server.js",
         "seed": "node src/scripts/seed.js",
         "lint": "eslint .",
-        "test": "jest",
+       "test": "set NODE_ENV=test && jest",
         "build": "echo \"Build step placeholder\""
     },
     "jest": {
@@ -41,12 +41,14 @@
         "@sentry/node": "^10.45.0",
         "@sentry/profiling-node": "^10.45.0",
         "bcrypt": "^6.0.0",
+        "compression": "^1.8.1",
         "cookie-parser": "^1.4.7",
         "cors": "^2.8.6",
         "dotenv": "^17.3.1",
         "express": "^5.2.1",
         "express-rate-limit": "^8.3.1",
         "express-session": "^1.19.0",
+        "express-validator": "^7.3.2",
         "helmet": "^8.1.0",
         "ioredis": "^5.10.1",
         "jsonwebtoken": "^9.0.3",

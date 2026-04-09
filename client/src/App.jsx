@@ -13,7 +13,9 @@ import {
   Modal,
   RouteLoadingBar,
   PageTransition,
+  ErrorBoundary,
 } from "@/src/components/ui";
+import { SWRProvider } from "./components/SWRProvider";
 import "./App.css";
 
 import { useEffect } from "react";
@@ -48,40 +50,44 @@ function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   return (
-    <BrowserRouter>
-      <div className="app min-h-screen bg-white font-body text-zinc-900 pt-16 flex flex-col">
-        <RouteLoadingBar variant="primary" size="sm" showShimmer />
-        <Header />
+    <SWRProvider>
+      <BrowserRouter>
+        <ErrorBoundary>
+          <div className="app min-h-screen bg-white font-body text-zinc-900 pt-16 flex flex-col">
+            <RouteLoadingBar variant="primary" size="sm" showShimmer />
+            <Header />
 
-        <main className="flex-1">
-          <AnimatedRoutes />
-        </main>
+            <main className="flex-1">
+              <AnimatedRoutes />
+            </main>
 
-        <Footer />
+            <Footer />
 
-        <Modal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          title="Priority Access"
-          size="md"
-        >
-          <div className="space-y-4">
-            <p className="text-neutral-600">
-              Get first access to every low-volume drop and private capsule
-              release before public launch.
-            </p>
-            <div className="flex justify-end gap-2 mt-6">
-              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
-                Not now
-              </Button>
-              <Button variant="primary" onClick={() => setIsModalOpen(false)}>
-                Reserve Spot
-              </Button>
-            </div>
+            <Modal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              title="Priority Access"
+              size="md"
+            >
+              <div className="space-y-4">
+                <p className="text-neutral-600">
+                  Get first access to every low-volume drop and private capsule
+                  release before public launch.
+                </p>
+                <div className="flex justify-end gap-2 mt-6">
+                  <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                    Not now
+                  </Button>
+                  <Button variant="primary" onClick={() => setIsModalOpen(false)}>
+                    Reserve Spot
+                  </Button>
+                </div>
+              </div>
+            </Modal>
           </div>
-        </Modal>
-      </div>
-    </BrowserRouter>
+        </ErrorBoundary>
+      </BrowserRouter>
+    </SWRProvider>
   );
 }
 

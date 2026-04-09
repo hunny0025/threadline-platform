@@ -31,7 +31,7 @@ function ProofCell({ stat }) {
           fontWeight: 700,
           letterSpacing: "-0.04em",
           lineHeight: 1,
-          color: "#030213",
+          color: "#af26ff",
         }}
       >
         {stat.num}
