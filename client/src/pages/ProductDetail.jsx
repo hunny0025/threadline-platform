@@ -104,6 +104,7 @@ export function ProductDetail() {
   // Fetch product from API via SWR
   const { product: rawProduct, isLoading, isError, error, mutate } = useProduct(id);
   const product = mapProduct(rawProduct);
+  const variants = rawProduct?.variants || [];
 
   // CTA visibility tracking for sticky mobile bar
   const ctaRef = useRef(null);
@@ -195,7 +196,7 @@ export function ProductDetail() {
 
           {/* Right: Product Info */}
           <div ref={infoReveal.ref} style={infoReveal.style}>
-            <ProductInfo product={product} ref={ctaRef} />
+            <ProductInfo product={product} variants={variants} ref={ctaRef} />
           </div>
         </div>
 
@@ -243,7 +244,7 @@ export function ProductDetail() {
       </div>
 
       {/* ── Sticky Mobile Add-to-Cart Bar ─────────────────── */}
-      <StickyAddToCart product={product} isVisible={!ctaVisible} />
+      <StickyAddToCart product={product} variants={variants} isVisible={!ctaVisible} />
     </>
   );
 }

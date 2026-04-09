@@ -6,6 +6,7 @@ import { useScrollDirection } from "../../hooks/useScrollDirection";
 import { SearchBar } from "../ui/SearchBar";
 import { AuthModal, Button } from "../ui";
 import { CartDrawer } from "./CartDrawer";
+import { useCartContext } from "../CartContext";
 
 export function Header() {
   const scrollDirection = useScrollDirection();
@@ -16,42 +17,8 @@ export function Header() {
   const [authMode, setAuthMode] = useState("login");
   const [isCartOpen, setIsCartOpen] = useState(false);
 
-  // Mock Cart State
-  const [cartItems, setCartItems] = useState([
-    {
-      id: "1",
-      title: "Heavyweight Boxy Tee",
-      price: 45,
-      quantity: 1,
-      size: "L",
-      color: "Washed Black",
-      image:
-        "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80",
-    },
-    {
-      id: "2",
-      title: "Nylon Cargo Pants",
-      price: 120,
-      quantity: 1,
-      size: "M",
-      color: "Olive",
-      image:
-        "https://images.unsplash.com/photo-1624378441864-6da7c44422e1?w=500&q=80",
-    },
-  ]);
-
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item,
-      ),
-    );
-  };
-
-  const removeItem = (id) => {
-    setCartItems((prev) => prev.filter((item) => item.id !== id));
-  };
+  // ── Live Cart State from API ──────────────────────────────
+  const { cartItems, itemCount, updateItem, removeItem } = useCartContext();
 
   // Auth handlers
   const openLogin = () => {
@@ -238,9 +205,9 @@ export function Header() {
                   <circle cx="19" cy="21" r="1" />
                   <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" />
                 </svg>
-                {cartItems.length > 0 && (
+                {itemCount > 0 && (
                   <span className="absolute top-0 right-0 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white transform translate-x-1 -translate-y-1 bg-violet-600 rounded-full">
-                    {cartItems.reduce((acc, item) => acc + item.quantity, 0)}
+                    {itemCount}
                   </span>
                 )}
               </button>
@@ -364,8 +331,8 @@ export function Header() {
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cartItems={cartItems}
-        updateQuantity={updateQuantity}
-        removeItem={removeItem}
+        updateQuantity={(variantId, newQty) => updateItem(variantId, newQty)}
+        removeItem={(variantId) => removeItem(variantId)}
       />
     </>
   );

@@ -1,6 +1,7 @@
 import React, { useState, forwardRef } from 'react';
-import { ShoppingBag, Heart, Share2, Truck, RotateCcw } from 'lucide-react';
+import { ShoppingBag, Heart, Share2, Truck, RotateCcw, Check, Loader2 } from 'lucide-react';
 import { SizeGuideModal } from '../catalog/SizeGuideModal';
+import { useCartContext } from '../CartContext';
 
 const COLOR_HEX_MAP = {
   Black: '#18181b',
@@ -15,17 +16,72 @@ const COLOR_HEX_MAP = {
  * The CTA button ref is forwarded so the parent can observe its visibility
  * to toggle the sticky mobile bar.
  */
-export const ProductInfo = forwardRef(function ProductInfo({ product }, ctaRef) {
+export const ProductInfo = forwardRef(function ProductInfo({ product, variants = [] }, ctaRef) {
   const [selectedSize, setSelectedSize] = useState(null);
   const [selectedColor, setSelectedColor] = useState(product?.color || null);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [isSizeGuideOpen, setIsSizeGuideOpen] = useState(false);
+  const [addState, setAddState] = useState('idle'); // idle | loading | success | error
+
+  const { addItem } = useCartContext();
 
   if (!product) return null;
 
-  const handleAddToCart = () => {
+  /**
+   * Resolve the variant ID from the selected size + color combination.
+   */
+  const findVariantId = () => {
+    if (!variants || variants.length === 0) return null;
+
+    // Try exact match on size + color
+    const match = variants.find(
+      (v) =>
+        v.size === selectedSize &&
+        (selectedColor ? v.color === selectedColor : true),
+    );
+
+    if (match) return match._id || match.id;
+
+    // Fallback: match on size only
+    const sizeMatch = variants.find((v) => v.size === selectedSize);
+    return sizeMatch?._id || sizeMatch?.id || null;
+  };
+
+  const handleAddToCart = async () => {
     if (!selectedSize) return;
-    console.log(`🛒 Added to cart: ${product.title} — Size: ${selectedSize}, Color: ${selectedColor}`);
+
+    const variantId = findVariantId();
+    if (!variantId) {
+      console.error('No matching variant found for', selectedSize, selectedColor);
+      setAddState('error');
+      setTimeout(() => setAddState('idle'), 2000);
+      return;
+    }
+
+    try {
+      setAddState('loading');
+      await addItem(variantId, 1);
+      setAddState('success');
+      setTimeout(() => setAddState('idle'), 2000);
+    } catch (err) {
+      console.error('Add to cart failed:', err);
+      setAddState('error');
+      setTimeout(() => setAddState('idle'), 3000);
+    }
+  };
+
+  const ctaLabel = () => {
+    if (!selectedSize) return 'Select a Size';
+    if (addState === 'loading') return 'Adding…';
+    if (addState === 'success') return 'Added!';
+    if (addState === 'error') return 'Failed — Try Again';
+    return 'Add to Cart';
+  };
+
+  const ctaIcon = () => {
+    if (addState === 'loading') return <Loader2 size={18} className="animate-spin" />;
+    if (addState === 'success') return <Check size={18} />;
+    return <ShoppingBag size={18} />;
   };
 
   return (
@@ -129,18 +185,22 @@ export const ProductInfo = forwardRef(function ProductInfo({ product }, ctaRef) 
       <div className="flex flex-col sm:flex-row gap-3 pt-2" ref={ctaRef}>
         <button
           onClick={handleAddToCart}
-          disabled={!selectedSize}
+          disabled={!selectedSize || addState === 'loading'}
           className={`
             flex-1 flex items-center justify-center gap-2 py-3.5 sm:py-4 rounded-xl
             text-sm sm:text-base font-semibold transition-all duration-200
-            ${selectedSize
-              ? 'bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] shadow-md'
-              : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
+            ${addState === 'success'
+              ? 'bg-emerald-600 text-white shadow-md'
+              : addState === 'error'
+                ? 'bg-red-600 text-white shadow-md'
+                : selectedSize
+                  ? 'bg-zinc-900 text-white hover:bg-zinc-800 active:scale-[0.98] shadow-md'
+                  : 'bg-zinc-200 text-zinc-400 cursor-not-allowed'
             }
           `}
         >
-          <ShoppingBag size={18} />
-          {selectedSize ? 'Add to Cart' : 'Select a Size'}
+          {ctaIcon()}
+          {ctaLabel()}
         </button>
 
         <button
