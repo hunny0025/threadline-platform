@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useMemo, Suspense } from "react";
+import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PackageOpen } from "lucide-react";
+import { PackageOpen, Search, SlidersHorizontal } from "lucide-react";
+import { useDebounce } from "../hooks/useDebounce";
 import { ProductGrid } from "../components/catalog/ProductGrid";
 import { ProductCard } from "../components/catalog/ProductCard";
 import { ProductSkeleton } from "../components/catalog/ProductSkeleton";
@@ -67,6 +68,14 @@ const areFiltersEqual = (a, b) =>
       a[key].every((v) => b[key].includes(v)),
   );
 
+// ── Sort options ─────────────────────────────────────────────
+const SORT_OPTIONS = [
+  { value: 'newest',     label: 'Newest' },
+  { value: 'price_asc',  label: 'Price: Low → High' },
+  { value: 'price_desc', label: 'Price: High → Low' },
+  { value: 'name_asc',   label: 'Name: A → Z' },
+];
+
 // ── Filter sidebar section ──────────────────────────────────
 function FilterSection({ title, isOpen, onToggle, children }) {
   return (
@@ -105,6 +114,31 @@ function CatalogGridContent() {
   }));
   const [quickLookProduct, setQuickLookProduct] = useState(null);
 
+  // ── Search state ───────────────────────────────────────
+  const [searchInput, setSearchInput] = useState(
+    () => searchParams.get("search") || "",
+  );
+  const debouncedSearch = useDebounce(searchInput, 300);
+
+  // ── Price range state ──────────────────────────────────
+  const [minPriceInput, setMinPriceInput] = useState(
+    () => searchParams.get("minPrice") || "",
+  );
+  const [maxPriceInput, setMaxPriceInput] = useState(
+    () => searchParams.get("maxPrice") || "",
+  );
+  const [minPrice, setMinPrice] = useState(
+    () => searchParams.get("minPrice") || "",
+  );
+  const [maxPrice, setMaxPrice] = useState(
+    () => searchParams.get("maxPrice") || "",
+  );
+
+  // ── Sort state ─────────────────────────────────────────
+  const [sortBy, setSortBy] = useState(
+    () => searchParams.get("sort") || "newest",
+  );
+
   // ── Fetch categories from API ──────────────────────────
   const {
     categories,
@@ -122,8 +156,17 @@ function CatalogGridContent() {
         params[key] = selectedFilters[key][0];
       }
     });
+    // Text search
+    if (debouncedSearch && debouncedSearch.trim().length >= 2) {
+      params.search = debouncedSearch.trim();
+    }
+    // Price range
+    if (minPrice) params.minPrice = minPrice;
+    if (maxPrice) params.maxPrice = maxPrice;
+    // Sort
+    if (sortBy && sortBy !== 'newest') params.sort = sortBy;
     return params;
-  }, [page, activeCategory, selectedFilters]);
+  }, [page, activeCategory, selectedFilters, debouncedSearch, minPrice, maxPrice, sortBy]);
 
   // ── Fetch products via SWR ─────────────────────────────
   const {
@@ -143,26 +186,47 @@ function CatalogGridContent() {
     );
     const urlCat = searchParams.get("category") || null;
     setActiveCategory((prev) => (prev === urlCat ? prev : urlCat));
+
+    const urlSearch = searchParams.get("search") || "";
+    setSearchInput((prev) => (prev === urlSearch ? prev : urlSearch));
+
+    const urlMin = searchParams.get("minPrice") || "";
+    const urlMax = searchParams.get("maxPrice") || "";
+    setMinPrice((prev) => (prev === urlMin ? prev : urlMin));
+    setMaxPrice((prev) => (prev === urlMax ? prev : urlMax));
+    setMinPriceInput((prev) => (prev === urlMin ? prev : urlMin));
+    setMaxPriceInput((prev) => (prev === urlMax ? prev : urlMax));
+
+    const urlSort = searchParams.get("sort") || "newest";
+    setSortBy((prev) => (prev === urlSort ? prev : urlSort));
   }, [searchParams]);
 
   useEffect(() => {
     const nextParams = filtersToSearchParams(selectedFilters, activeCategory);
+    if (debouncedSearch && debouncedSearch.trim().length >= 2)
+      nextParams.set("search", debouncedSearch.trim());
+    if (minPrice) nextParams.set("minPrice", minPrice);
+    if (maxPrice) nextParams.set("maxPrice", maxPrice);
+    if (sortBy && sortBy !== "newest") nextParams.set("sort", sortBy);
     if (nextParams.toString() !== searchParams.toString()) {
       setSearchParams(nextParams, { replace: true });
     }
-  }, [selectedFilters, activeCategory, searchParams, setSearchParams]);
+  }, [selectedFilters, activeCategory, debouncedSearch, minPrice, maxPrice, sortBy, searchParams, setSearchParams]);
 
   // Reset page when filters change
   useEffect(() => {
     setPage(1);
-  }, [selectedFilters, activeCategory]);
+  }, [selectedFilters, activeCategory, debouncedSearch, minPrice, maxPrice, sortBy]);
 
   // ── Filter helpers ─────────────────────────────────────
   const hasActiveFilters = useMemo(
     () =>
       FILTER_KEYS.some((key) => selectedFilters[key].length > 0) ||
-      activeCategory !== null,
-    [selectedFilters, activeCategory],
+      activeCategory !== null ||
+      (debouncedSearch && debouncedSearch.trim().length >= 2) ||
+      !!minPrice ||
+      !!maxPrice,
+    [selectedFilters, activeCategory, debouncedSearch, minPrice, maxPrice],
   );
 
   const toggleFilter = (key, value) => {
@@ -183,6 +247,12 @@ function CatalogGridContent() {
   const clearAllFilters = () => {
     setSelectedFilters(buildInitialFilters());
     setActiveCategory(null);
+    setSearchInput("");
+    setMinPriceInput("");
+    setMaxPriceInput("");
+    setMinPrice("");
+    setMaxPrice("");
+    setSortBy("newest");
   };
 
   const handleCategoryChange = (id) =>
@@ -321,11 +391,95 @@ function CatalogGridContent() {
                 })}
               </FilterSection>
             ))}
+
+            {/* Price Range filter */}
+            <FilterSection
+              title="Price Range"
+              isOpen={openSections.price !== false}
+              onToggle={() => toggleSection("price")}
+            >
+              <div className="flex items-center gap-2 w-full">
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Min"
+                    value={minPriceInput}
+                    onChange={(e) => setMinPriceInput(e.target.value)}
+                    onBlur={() => setMinPrice(minPriceInput)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') setMinPrice(minPriceInput); }}
+                    className="w-full pl-7 pr-2 py-2 text-xs rounded-lg border border-zinc-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+                    aria-label="Minimum price"
+                  />
+                </div>
+                <span className="text-zinc-400 text-xs">—</span>
+                <div className="relative flex-1">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    placeholder="Max"
+                    value={maxPriceInput}
+                    onChange={(e) => setMaxPriceInput(e.target.value)}
+                    onBlur={() => setMaxPrice(maxPriceInput)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') setMaxPrice(maxPriceInput); }}
+                    className="w-full pl-7 pr-2 py-2 text-xs rounded-lg border border-zinc-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+                    aria-label="Maximum price"
+                  />
+                </div>
+              </div>
+            </FilterSection>
           </div>
         </aside>
 
         {/* ── Product Grid ──────────────────────────────────── */}
         <div className="flex flex-col gap-8">
+          {/* ── Search + Sort toolbar ─────────────────────────── */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Search input */}
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search products..."
+                className="w-full pl-10 pr-4 py-2.5 text-sm rounded-lg border border-zinc-300 bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all placeholder:text-zinc-400"
+                aria-label="Search products"
+              />
+              {searchInput && (
+                <button
+                  type="button"
+                  onClick={() => setSearchInput("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600 transition-colors"
+                >
+                  ×
+                </button>
+              )}
+            </div>
+
+            {/* Sort dropdown */}
+            <div className="relative">
+              <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="appearance-none pl-10 pr-8 py-2.5 text-sm rounded-lg border border-zinc-300 bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all cursor-pointer min-w-[180px]"
+                aria-label="Sort products"
+              >
+                {SORT_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">▾</span>
+            </div>
+          </div>
+
           {hasActiveFilters && !isLoading && (
             <p className="text-sm text-zinc-600">
               Showing {mappedProducts.length} result

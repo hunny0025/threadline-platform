@@ -1,21 +1,32 @@
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, X, User } from "lucide-react";
+import { Search, X, User, AlertCircle } from "lucide-react";
 import { useScrollDirection } from "../../hooks/useScrollDirection";
 import { SearchBar } from "../ui/SearchBar";
 import { AuthModal, Button } from "../ui";
 import { CartDrawer } from "./CartDrawer";
 import { useCartContext } from "../CartContext";
+import { useSearch } from "../../hooks/useSearch";
+import { useDebounce } from "../../hooks/useDebounce";
 
 export function Header() {
   const scrollDirection = useScrollDirection();
+  const navigate = useNavigate();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isCartOpen, setIsCartOpen] = useState(false);
+
+  // ── Live Search via API ────────────────────────────────────
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
+  const {
+    results: searchResults,
+    isLoading: isSearching,
+    isError: isSearchError,
+    error: searchError,
+  } = useSearch(debouncedSearchQuery);
 
   // ── Live Cart State from API ──────────────────────────────
   const { cartItems, itemCount, updateItem, removeItem } = useCartContext();
@@ -71,58 +82,18 @@ export function Header() {
     window.location.href = "/api/auth/google";
   };
 
-  const handleSearch = async (query) => {
-    if (!query.trim()) {
-      setSearchResults([]);
-      return;
-    }
+  const handleSearch = useCallback((query) => {
+    setSearchQuery(query);
+  }, []);
 
-    setIsSearching(true);
-
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 400));
-
-    // Mock search results
-    const mockResults = [
-      {
-        id: "1",
-        title: `${query} - Trending Now`,
-        subtitle: "Popular items matching your search",
-        thumbnail:
-          "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=100&h=100&fit=crop",
-      },
-      {
-        id: "2",
-        title: `${query} - New Arrivals`,
-        subtitle: "Latest collection items",
-        thumbnail:
-          "https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=100&h=100&fit=crop",
-      },
-      {
-        id: "3",
-        title: `${query} - Best Sellers`,
-        subtitle: "Most popular items",
-        thumbnail:
-          "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=100&h=100&fit=crop",
-      },
-      {
-        id: "4",
-        title: `${query} - Sale Items`,
-        subtitle: "Discounted prices",
-        thumbnail:
-          "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=100&h=100&fit=crop",
-      },
-    ];
-
-    setSearchResults(mockResults);
-    setIsSearching(false);
-  };
-
-  const handleResultSelect = (result) => {
-    console.log("Header search selected:", result);
-    setIsSearchOpen(false);
-    // Add navigation logic here
-  };
+  const handleResultSelect = useCallback(
+    (result) => {
+      setIsSearchOpen(false);
+      setSearchQuery("");
+      navigate(`/product/${result.id}`);
+    },
+    [navigate],
+  );
 
   const openSearch = () => {
     setIsSearchOpen(true);
@@ -130,7 +101,7 @@ export function Header() {
 
   const closeSearch = () => {
     setIsSearchOpen(false);
-    setSearchResults([]);
+    setSearchQuery("");
   };
 
   return (
@@ -287,6 +258,14 @@ export function Header() {
                     autoFocus
                   />
                 </div>
+
+                {/* Search Error */}
+                {isSearchError && (
+                  <div className="mb-4 flex items-center gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-4 py-2.5">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>{searchError?.message || 'Search failed. Please try again.'}</span>
+                  </div>
+                )}
 
                 {/* Quick Actions */}
                 <div className="border-t border-zinc-100 pt-4">
