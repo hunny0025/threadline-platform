@@ -16,6 +16,7 @@ import {
   ErrorBoundary,
 } from "@/src/components/ui";
 import { SWRProvider } from "./components/SWRProvider";
+import { CartProvider } from "./components/CartContext";
 import "./App.css";
 
 import { useEffect } from "react";
@@ -51,7 +52,8 @@ function App() {
 
   return (
     <SWRProvider>
-      <BrowserRouter>
+      <CartProvider>
+        <BrowserRouter>
         <ErrorBoundary>
           <div className="app min-h-screen bg-white font-body text-zinc-900 pt-16 flex flex-col">
             <RouteLoadingBar variant="primary" size="sm" showShimmer />
@@ -87,6 +89,7 @@ function App() {
           </div>
         </ErrorBoundary>
       </BrowserRouter>
+      </CartProvider>
     </SWRProvider>
   );
 }

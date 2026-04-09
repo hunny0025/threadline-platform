@@ -20,6 +20,7 @@
     "forceConsistentCasingInFileNames": true,
     "declaration": true,
     "declarationMap": true,
+    
     "sourceMap": true,
     "baseUrl": ".",
     "paths": {

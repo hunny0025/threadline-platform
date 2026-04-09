@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Package,
   Truck,
@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui";
 
-/* ── Generate mock order data ────────────────────────────── */
+/* ── Generate fallback order number ──────────────────────── */
 function generateOrderNumber() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ";
   const nums = "0123456789";
@@ -175,37 +175,27 @@ function TimelineStep({ icon: Icon, label, detail, isActive, isCompleted, delay 
 
 /* ── Main Component ──────────────────────────────────────── */
 export function OrderConfirmation() {
-  const [orderNumber] = useState(() => generateOrderNumber());
+  const location = useLocation();
+  const orderData = location.state;
+
+  const [orderNumber] = useState(() =>
+    orderData?.order?._id && !orderData.order._id.startsWith('demo_')
+      ? orderData.order._id
+      : generateOrderNumber(),
+  );
   const [copied, setCopied] = useState(false);
   const [confettiDone, setConfettiDone] = useState(false);
 
-  // Mock order details (mirroring the Checkout mock data)
-  const orderItems = [
-    {
-      id: "1",
-      title: "Heavyweight Boxy Tee",
-      price: 45,
-      quantity: 1,
-      size: "L",
-      color: "Washed Black",
-      image: "https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=500&q=80",
-    },
-    {
-      id: "2",
-      title: "Nylon Cargo Pants",
-      price: 120,
-      quantity: 1,
-      size: "M",
-      color: "Olive",
-      image: "https://images.unsplash.com/photo-1624378441864-6da7c44422e1?w=500&q=80",
-    },
-  ];
-
-  const subtotal = orderItems.reduce((t, i) => t + i.price * i.quantity, 0);
-  const shipping = 0; // Standard free
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
-  const delivery = getEstimatedDelivery(false);
+  // Use route state or fallback to defaults
+  const orderItems = orderData?.orderItems || [];
+  const subtotal = orderData?.subtotal || orderItems.reduce((t, i) => t + i.price * i.quantity, 0);
+  const shipping = orderData?.shipping ?? 0;
+  const tax = orderData?.tax ?? subtotal * 0.08;
+  const total = orderData?.total ?? subtotal + shipping + tax;
+  const shippingAddress = orderData?.shippingAddress || null;
+  const shippingMethod = orderData?.shippingMethod || 'standard';
+  const paymentMethod = orderData?.paymentMethod || '•••• 4242';
+  const delivery = getEstimatedDelivery(shippingMethod === 'express');
 
   const copyOrderNumber = () => {
     navigator.clipboard.writeText(orderNumber).then(() => {
@@ -218,6 +208,29 @@ export function OrderConfirmation() {
     const timer = setTimeout(() => setConfettiDone(true), 1200);
     return () => clearTimeout(timer);
   }, []);
+
+  // ── No order data fallback ────────────────────────────────
+  if (!orderData || orderItems.length === 0) {
+    return (
+      <div className="bg-white min-h-screen pb-24">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-20 text-center">
+          <div className="w-20 h-20 bg-zinc-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Package className="w-8 h-8 text-zinc-300" />
+          </div>
+          <h1 className="text-2xl font-display font-semibold text-zinc-900 mb-3">No order found</h1>
+          <p className="text-zinc-500 mb-8 max-w-md mx-auto">
+            It looks like you navigated here directly. Complete a purchase to see your order confirmation.
+          </p>
+          <Link to="/shop">
+            <Button variant="primary" size="lg" className="px-10">
+              Continue Shopping
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen pb-24">
@@ -364,7 +377,9 @@ export function OrderConfirmation() {
               <p className="text-xl font-display font-bold text-zinc-900 tracking-tight">
                 {delivery.range}
               </p>
-              <p className="text-xs text-zinc-500 mt-1">Standard Shipping · Free</p>
+              <p className="text-xs text-zinc-500 mt-1">
+                {shippingMethod === 'express' ? 'Express Shipping' : 'Standard Shipping'} · {shipping === 0 ? 'Free' : `$${shipping.toFixed(2)}`}
+              </p>
             </div>
 
             {/* Order Timeline */}
@@ -405,12 +420,22 @@ export function OrderConfirmation() {
               <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-2">
                 Shipping to
               </p>
-              <p className="text-sm text-zinc-900 font-medium">Alex Johnson</p>
-              <p className="text-sm text-zinc-600">
-                123 Fashion Ave, Suite 4B
-                <br />
-                New York, NY 10001
-              </p>
+              {shippingAddress ? (
+                <>
+                  <p className="text-sm text-zinc-900 font-medium">{shippingAddress.name}</p>
+                  <p className="text-sm text-zinc-600">
+                    {shippingAddress.address}
+                    {shippingAddress.apartment && `, ${shippingAddress.apartment}`}
+                    <br />
+                    {shippingAddress.city}, {shippingAddress.state} {shippingAddress.zip}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm text-zinc-900 font-medium">Customer</p>
+                  <p className="text-sm text-zinc-600">Address provided at checkout</p>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -433,7 +458,7 @@ export function OrderConfirmation() {
             <div className="space-y-4">
               {orderItems.map((item, idx) => (
                 <motion.div
-                  key={item.id}
+                  key={item.variantId || item.id || idx}
                   className="flex gap-4 items-center"
                   initial={{ opacity: 0, x: 12 }}
                   animate={{ opacity: 1, x: 0 }}
@@ -441,8 +466,8 @@ export function OrderConfirmation() {
                 >
                   <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-zinc-200 bg-white flex-shrink-0">
                     <img
-                      src={item.image}
-                      alt={item.title}
+                      src={item.image || 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=500&q=80'}
+                      alt={item.title || 'Product'}
                       className="w-full h-full object-cover"
                     />
                     <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-zinc-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white z-10">
@@ -451,7 +476,7 @@ export function OrderConfirmation() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="text-sm font-medium text-zinc-900 truncate">
-                      {item.title}
+                      {item.title || 'Product'}
                     </h3>
                     <p className="text-xs text-zinc-500 capitalize">
                       {item.color} / {item.size}
@@ -472,7 +497,7 @@ export function OrderConfirmation() {
               </div>
               <div className="flex justify-between text-sm text-zinc-600">
                 <span>Shipping</span>
-                <span className="text-emerald-600 font-medium">Free</span>
+                <span className={shipping === 0 ? "text-emerald-600 font-medium" : ""}>{shipping === 0 ? "Free" : `$${shipping.toFixed(2)}`}</span>
               </div>
               <div className="flex justify-between text-sm text-zinc-600">
                 <span>Tax</span>
@@ -484,7 +509,7 @@ export function OrderConfirmation() {
             <div className="pt-4 border-t border-zinc-200 flex justify-between items-center">
               <div>
                 <span className="text-base font-semibold text-zinc-900">Total</span>
-                <p className="text-xs text-zinc-500 font-normal">Paid with •••• 4242</p>
+                <p className="text-xs text-zinc-500 font-normal">Paid with {paymentMethod}</p>
               </div>
               <div className="text-2xl font-bold font-display text-zinc-900 tracking-tight">
                 <span className="text-xs font-medium text-zinc-500 mr-1 uppercase">

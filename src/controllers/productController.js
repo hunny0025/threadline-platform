@@ -8,7 +8,7 @@ const CACHE_TTL = 300; // 5 minutes
 // GET /products (paginate + filter)
 exports.getProducts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, category, gender, fitType, fabricWeight, minPrice, maxPrice } = req.query;
+    const { page = 1, limit = 10, category, gender, fitType, fabricWeight, minPrice, maxPrice, sort, search } = req.query;
 
     // Generate cache key based on query params
     const cacheKey = productKey('list', req.query);
@@ -29,12 +29,27 @@ exports.getProducts = async (req, res) => {
       if (minPrice) filter.basePrice.$gte = Number(minPrice);
       if (maxPrice) filter.basePrice.$lte = Number(maxPrice);
     }
+
+    // Text search support (requires text index on Product model)
+    if (search && search.trim().length >= 2) {
+      filter.$text = { $search: search.trim() };
+    }
+
+    // Sort options
+    const sortMap = {
+      price_asc:  { basePrice: 1 },
+      price_desc: { basePrice: -1 },
+      name_asc:   { name: 1 },
+      newest:     { createdAt: -1 },
+    };
+    const sortOrder = sortMap[sort] || { createdAt: -1 };
+
     const total = await Product.countDocuments(filter);
     const products = await Product.find(filter)
       .populate('category', 'name slug')
       .skip((page - 1) * limit)
       .limit(Number(limit))
-      .sort({ createdAt: -1 });
+      .sort(sortOrder);
 
     const result = paginate(products, total, page, limit);
 

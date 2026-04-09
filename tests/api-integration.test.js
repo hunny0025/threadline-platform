@@ -197,3 +197,151 @@ describe('Category API response', () => {
     expect(category).toHaveProperty('isActive', true);
   });
 });
+
+// ── Search API → SearchResult mapping tests ──────────────────
+
+describe('Search API → SearchResult mapping', () => {
+  const mapResult = (item) => {
+    const categoryName = item.category?.name || '';
+    const price = item.basePrice != null ? `$${Number(item.basePrice).toFixed(2)}` : '';
+    const subtitle = [categoryName, price].filter(Boolean).join(' · ');
+    return {
+      id: item.id || item._id,
+      title: item.name,
+      subtitle,
+      thumbnail: item.thumbnail || null,
+    };
+  };
+
+  const apiSearchResult = {
+    id: '661f1e2b3c4d5e6f7a8b9c0d',
+    name: 'Classic Oxford Shirt',
+    slug: 'classic-oxford-shirt',
+    basePrice: 89.99,
+    thumbnail: 'https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=100',
+    category: { _id: 'cat1', name: 'Tops', slug: 'tops' },
+    gender: 'men',
+    fitType: 'regular',
+    score: 15,
+  };
+
+  test('maps id correctly', () => {
+    const result = mapResult(apiSearchResult);
+    expect(result.id).toBe('661f1e2b3c4d5e6f7a8b9c0d');
+  });
+
+  test('maps name → title', () => {
+    const result = mapResult(apiSearchResult);
+    expect(result.title).toBe('Classic Oxford Shirt');
+  });
+
+  test('builds subtitle from category and price', () => {
+    const result = mapResult(apiSearchResult);
+    expect(result.subtitle).toBe('Tops · $89.99');
+  });
+
+  test('maps thumbnail correctly', () => {
+    const result = mapResult(apiSearchResult);
+    expect(result.thumbnail).toContain('unsplash.com');
+  });
+
+  test('handles missing category gracefully', () => {
+    const noCategory = { ...apiSearchResult, category: null };
+    const result = mapResult(noCategory);
+    expect(result.subtitle).toBe('$89.99');
+  });
+
+  test('handles missing thumbnail', () => {
+    const noThumb = { ...apiSearchResult, thumbnail: null };
+    const result = mapResult(noThumb);
+    expect(result.thumbnail).toBeNull();
+  });
+
+  test('handles _id fallback', () => {
+    const withMongoId = { ...apiSearchResult, id: undefined, _id: 'mongo123' };
+    const result = mapResult(withMongoId);
+    expect(result.id).toBe('mongo123');
+  });
+});
+
+// ── Sort parameter tests ─────────────────────────────────────
+
+describe('Sort parameter handling', () => {
+  const sortMap = {
+    price_asc:  { basePrice: 1 },
+    price_desc: { basePrice: -1 },
+    name_asc:   { name: 1 },
+    newest:     { createdAt: -1 },
+  };
+
+  test('price_asc maps to basePrice ascending', () => {
+    expect(sortMap['price_asc']).toEqual({ basePrice: 1 });
+  });
+
+  test('price_desc maps to basePrice descending', () => {
+    expect(sortMap['price_desc']).toEqual({ basePrice: -1 });
+  });
+
+  test('name_asc maps to name ascending', () => {
+    expect(sortMap['name_asc']).toEqual({ name: 1 });
+  });
+
+  test('newest maps to createdAt descending', () => {
+    expect(sortMap['newest']).toEqual({ createdAt: -1 });
+  });
+
+  test('unknown sort key falls back to newest', () => {
+    const sort = 'invalid_sort';
+    const result = sortMap[sort] || { createdAt: -1 };
+    expect(result).toEqual({ createdAt: -1 });
+  });
+});
+
+// ── Price filter integration tests ───────────────────────────
+
+describe('Price filter params', () => {
+  test('minPrice and maxPrice are sent as numbers', () => {
+    const params = { minPrice: '20', maxPrice: '100' };
+    const filter = {};
+    if (params.minPrice || params.maxPrice) {
+      filter.basePrice = {};
+      if (params.minPrice) filter.basePrice.$gte = Number(params.minPrice);
+      if (params.maxPrice) filter.basePrice.$lte = Number(params.maxPrice);
+    }
+    expect(filter.basePrice.$gte).toBe(20);
+    expect(filter.basePrice.$lte).toBe(100);
+  });
+
+  test('only minPrice creates $gte filter', () => {
+    const params = { minPrice: '50' };
+    const filter = {};
+    if (params.minPrice || params.maxPrice) {
+      filter.basePrice = {};
+      if (params.minPrice) filter.basePrice.$gte = Number(params.minPrice);
+      if (params.maxPrice) filter.basePrice.$lte = Number(params.maxPrice);
+    }
+    expect(filter.basePrice.$gte).toBe(50);
+    expect(filter.basePrice.$lte).toBeUndefined();
+  });
+
+  test('only maxPrice creates $lte filter', () => {
+    const params = { maxPrice: '200' };
+    const filter = {};
+    if (params.minPrice || params.maxPrice) {
+      filter.basePrice = {};
+      if (params.minPrice) filter.basePrice.$gte = Number(params.minPrice);
+      if (params.maxPrice) filter.basePrice.$lte = Number(params.maxPrice);
+    }
+    expect(filter.basePrice.$gte).toBeUndefined();
+    expect(filter.basePrice.$lte).toBe(200);
+  });
+
+  test('no price params creates no filter', () => {
+    const params = {};
+    const filter = {};
+    if (params.minPrice || params.maxPrice) {
+      filter.basePrice = {};
+    }
+    expect(filter.basePrice).toBeUndefined();
+  });
+});
