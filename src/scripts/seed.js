@@ -22,6 +22,10 @@ const categoryData = [
   { name: 'Trousers',  slug: 'trousers',  description: 'Tailored and relaxed trousers',    sortOrder: 4 },
   { name: 'Hoodies',   slug: 'hoodies',   description: 'Comfort-first layered style',      sortOrder: 5 },
   { name: 'Jackets',   slug: 'jackets',   description: 'Premium outerwear',                sortOrder: 6 },
+  { name: 'Shorts',    slug: 'shorts',    description: 'Casual and athletic shorts',       sortOrder: 7 },
+  { name: 'Co-ords',   slug: 'co-ords',   description: 'Matching sets and co-ord suits',   sortOrder: 8 },
+  { name: 'Sweatshirts', slug: 'sweatshirts', description: 'Cozy sweatshirt essentials',   sortOrder: 9 },
+  { name: 'Accessories', slug: 'accessories', description: 'Caps, bags and accessories',   sortOrder: 10 },
 ];
 
 const productData = [

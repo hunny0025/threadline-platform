@@ -12,5 +12,6 @@ router.use('/cart', require('./cart'));
 router.use('/payment', require('./payment'));
 router.use('/content', require('./content'));
 router.use('/newsletter', require('./newsletter'));
+router.use('/wishlist', require('./wishlist'));
 
 module.exports = router;

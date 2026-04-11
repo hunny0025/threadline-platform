@@ -31,7 +31,8 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: true,
-      minlength: 6
+      minlength: 6,
+      select: false,
     },
     phone: {
       type: String,
@@ -51,7 +52,15 @@ const userSchema = new mongoose.Schema(
       default: true
     },
     // 2. Add the addresses array here
-    addresses: [addressSchema]
+    addresses: [addressSchema],
+
+    // 3. Wishlist — stores product references with timestamp
+    wishlist: [
+      {
+        product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+        addedAt: { type: Date, default: Date.now },
+      }
+    ]
   },
   {
     timestamps: true

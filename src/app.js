@@ -36,7 +36,7 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       imgSrc: ["'self'", "data:", "https://res.cloudinary.com"], // Common image sources
       connectSrc: ["'self'", "https://api.stripe.com"], // For payments
@@ -68,8 +68,15 @@ app.use(corsMiddleware);
 app.use(compression());
 
 // Input sanitization - prevent NoSQL injection & XSS
+const mongoSanitize = require('express-mongo-sanitize');
+const xssClean = require('xss-clean');
+
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+if (process.env.NODE_ENV !== 'test') {
+  app.use(mongoSanitize({ replaceWith: '_' }));
+  app.use(xssClean());
+}
 app.use(cookieParser());
 
 // Health check (before rate limiter)

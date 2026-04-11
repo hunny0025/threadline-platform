@@ -48,7 +48,7 @@ exports.confirmPayment = async (req, res) => {
     if (expectedSignature !== razorpaySignature) {
       return sendError(res, 'Invalid payment signature', 400);
     }
-    const order = await Order.findById(orderId);
+    const order = await Order.findOne({ _id: orderId, userId: req.user.id });
     if (!order) return sendError(res, 'Order not found', 404);
     order.statusHistory.push({ status: 'paid' });
     await order.save();
@@ -63,14 +63,24 @@ exports.webhook = async (req, res) => {
     const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
     const signature = req.headers['x-razorpay-signature'];
 
-    if (webhookSecret && signature) {
-      const expectedSignature = crypto
-        .createHmac('sha256', webhookSecret)
-        .update(JSON.stringify(req.body))
-        .digest('hex');
-      if (expectedSignature !== signature) {
-        return res.status(400).json({ error: 'Invalid webhook signature' });
-      }
+    // Always return 200 for webhooks (external services retry otherwise)
+    if (!webhookSecret) {
+      console.error('Webhook secret not configured');
+      return res.status(200).json({ received: true });
+    }
+    if (!signature) {
+      console.error('Missing webhook signature');
+      return res.status(200).json({ received: true });
+    }
+
+    const expected = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(JSON.stringify(req.body))
+      .digest('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(signature))) {
+      console.error('Invalid webhook signature');
+      return res.status(200).json({ received: true });
     }
 
     const event = req.body.event;
@@ -110,7 +120,8 @@ exports.webhook = async (req, res) => {
     res.status(200).json({ received: true });
   } catch (err) {
     console.error('Webhook error:', err.message);
-    res.status(500).json({ error: err.message });
+    // Still return 200 to prevent retries
+    res.status(200).json({ received: true });
   }
 };
 

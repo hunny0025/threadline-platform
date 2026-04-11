@@ -42,5 +42,8 @@ router.delete('/:id', auth, rbac('admin'), productIdValidation, validate, delete
 
 // Variants
 router.use('/:id/variants', require('./variants'));
-
+const { createReview, getReviews } = require('../controllers/reviewController');
+// Reviews
+router.get('/:productId/reviews', getReviews);
+router.post('/:productId/reviews', auth, upload.single('image'), createReview);
 module.exports = router;
