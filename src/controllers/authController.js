@@ -35,6 +35,7 @@ const register = async (req, res) => {
     await user.save();
     sendSuccess(res, { id: user._id, name: user.name, email: user.email }, 'User registered successfully', 201);
   } catch (err) {
+    console.error('REGISTER ERROR:', err.message);
     sendError(res, err.message, 500);
   }
 };
@@ -45,7 +46,7 @@ const login = async (req, res) => {
     if (!email || !password) {
       return sendError(res, 'Email and password are required', 400);
     }
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     if (!user || !(await user.comparePassword(password))) {
       return sendError(res, 'Invalid email or password', 401);
     }
@@ -59,6 +60,7 @@ const login = async (req, res) => {
     });
     sendSuccess(res, { accessToken, user: { id: user._id, name: user.name, email: user.email, role: user.role } }, 'Login successful');
   } catch (err) {
+    console.error('LOGIN ERROR:', err.message);
     sendError(res, err.message, 500);
   }
 };
@@ -67,10 +69,21 @@ const refresh = async (req, res) => {
   try {
     const token = req.cookies.refreshToken;
     if (!token) return sendError(res, 'No refresh token', 401);
+
     const decoded = jwt.verify(token, process.env.JWT_REFRESH_SECRET);
     const user = await User.findById(decoded.id);
     if (!user) return sendError(res, 'User not found', 401);
+
+    const newRefreshToken = generateRefreshToken(user);
     const accessToken = generateAccessToken(user);
+
+    res.cookie('refreshToken', newRefreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     sendSuccess(res, { accessToken }, 'Token refreshed');
   } catch (err) {
     sendError(res, 'Invalid refresh token', 401);

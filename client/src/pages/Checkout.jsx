@@ -124,26 +124,7 @@ export function Checkout() {
       try {
         order = await createOrder(null);
       } catch (err) {
-        // If auth required, simulate order for demo purposes
-        if (err.message?.includes('Authorization') || err.message?.includes('401') || err.message?.includes('token')) {
-          // Simulate a successful order for the demo flow
-          order = {
-            _id: `demo_${Date.now()}`,
-            items: cartItems.map(item => ({
-              productId: item.productId,
-              variantId: item.variantId,
-              size: item.size,
-              color: item.color,
-              price: item.price,
-              quantity: item.quantity,
-            })),
-            totalAmount: total,
-            statusHistory: [{ status: 'placed', date: new Date().toISOString() }],
-            createdAt: new Date().toISOString(),
-          };
-        } else {
-          throw err;
-        }
+        throw err;
       }
 
       // Step 2: Attempt payment

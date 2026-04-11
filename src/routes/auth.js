@@ -27,15 +27,21 @@ router.post('/logout', logout);
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
+const crypto = require('crypto');
+const redis = require('../db/redis');
+
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login', session: false }),
-  (req, res) => {
+  async (req, res) => {
     const accessToken = jwt.sign(
       { id: req.user._id, role: req.user.role },
       process.env.JWT_SECRET,
       { expiresIn: '15m' }
     );
-    res.redirect(`${process.env.ALLOWED_ORIGINS.split(',')[0]}?token=${accessToken}`);
+    const code = crypto.randomUUID();
+    await redis.setEx(`oauth_code:${code}`, 60, accessToken);
+    const origin = process.env.ALLOWED_ORIGINS.split(',')[0];
+    res.redirect(`${origin}/auth/callback?code=${code}`);
   }
 );
 

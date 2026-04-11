@@ -2,31 +2,1280 @@ openapi: 3.0.0
 info:
   title: Threadline API
   version: 1.0.0
-  description: Fashion e-commerce platform API
+  description: |
+    Fashion e-commerce platform API.
+
+    ## Authentication
+    Most endpoints require a Bearer token in the `Authorization` header.
+
+    **How to get a token:**
+    1. Call `POST /auth/register` or `POST /auth/login`
+    2. Copy the `accessToken` from the response
+    3. Click **Authorize** above and enter: `Bearer <your_token>`
+
+    Access tokens expire in **15 minutes**. Use `POST /auth/refresh` (sends cookie automatically) to get a new one.
+
+  contact:
+    name: Threadline Dev Team
+
 servers:
-  - url: /api/v1
+  - url: https://threadline-platform-production.up.railway.app/api/v1
+    description: Production
+  - url: https://threadline-platform-staging.up.railway.app/api/v1
+    description: Staging
+  - url: http://localhost:3000/api/v1
+    description: Local
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Enter your access token here. Get one from `POST /auth/login`.
+        Example: `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+
+  schemas:
+    # ── Common ──────────────────────────────────────────────
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        message:
+          type: string
+        data:
+          type: object
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Something went wrong
+        status:
+          type: integer
+          example: 400
+
+    # ── User ────────────────────────────────────────────────
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          example: 64abc123def456789012
+        name:
+          type: string
+          example: Arjun Mehta
+        email:
+          type: string
+          example: arjun@example.com
+        role:
+          type: string
+          enum: [user, admin]
+          example: user
+        createdAt:
+          type: string
+          format: date-time
+
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 2
+          maxLength: 50
+          example: Arjun Mehta
+        email:
+          type: string
+          format: email
+          example: arjun@example.com
+        password:
+          type: string
+          minLength: 6
+          example: securepass123
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: arjun@example.com
+        password:
+          type: string
+          example: securepass123
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YWJjMTIzIiwicm9sZSI6InVzZXIifQ.signature
+        user:
+          $ref: '#/components/schemas/User'
+
+    # ── Product ─────────────────────────────────────────────
+    Product:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 64abc123def456789012
+        name:
+          type: string
+          example: Classic White Oxford Shirt
+        slug:
+          type: string
+          example: classic-white-oxford-shirt
+        basePrice:
+          type: number
+          example: 1299
+        images:
+          type: array
+          items:
+            type: string
+          example: ["https://res.cloudinary.com/threadline/image/upload/shirt.jpg"]
+        category:
+          type: string
+          example: 64abc123def456789013
+        gender:
+          type: string
+          enum: [men, women, unisex]
+        fitType:
+          type: string
+          example: slim
+        isActive:
+          type: boolean
+          example: true
+
+    # ── Cart ────────────────────────────────────────────────
+    CartItem:
+      type: object
+      properties:
+        variant:
+          type: string
+          example: 64abc123def456789014
+        quantity:
+          type: integer
+          example: 2
+
+    Cart:
+      type: object
+      properties:
+        _id:
+          type: string
+        userId:
+          type: string
+          nullable: true
+        sessionId:
+          type: string
+          nullable: true
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/CartItem'
+        expiresAt:
+          type: string
+          format: date-time
+
+    # ── Order ───────────────────────────────────────────────
+    OrderItem:
+      type: object
+      properties:
+        productId:
+          type: string
+        variantId:
+          type: string
+        size:
+          type: string
+          example: M
+        color:
+          type: string
+          example: white
+        price:
+          type: number
+          example: 1299
+        quantity:
+          type: integer
+          example: 1
+
+    Order:
+      type: object
+      properties:
+        _id:
+          type: string
+          example: 64abc123def456789015
+        userId:
+          type: string
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+        totalAmount:
+          type: number
+          example: 2598
+        statusHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+                enum: [placed, paid, shipped, delivered, cancelled]
+              date:
+                type: string
+                format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Authorization token required
+            status: 401
+
+    Forbidden:
+      description: Insufficient permissions (admin only)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Forbidden - You do not have permission
+            status: 403
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: Not found
+            status: 404
+
+    ValidationError:
+      description: Validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            success: false
+            message: "email: Valid email required"
+            status: 400
+
+# ── Global security (override per route if public) ─────────
+security:
+  - BearerAuth: []
+
 paths:
+
+  # ═══════════════════════════════════════════════════════════
+  # AUTH
+  # ═══════════════════════════════════════════════════════════
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a new user
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+            example:
+              name: Arjun Mehta
+              email: arjun@example.com
+              password: securepass123
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+              example:
+                success: true
+                message: User registered successfully
+                data:
+                  id: 64abc123def456789012
+                  name: Arjun Mehta
+                  email: arjun@example.com
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login and receive access token
+      description: |
+        Returns a short-lived **access token** (15 min) in the response body
+        and sets a **refresh token** as an httpOnly cookie (7 days).
+
+        Use the `accessToken` in the `Authorization: Bearer <token>` header for all protected routes.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            examples:
+              regular_user:
+                summary: Regular user login
+                value:
+                  email: arjun@example.com
+                  password: securepass123
+              admin_user:
+                summary: Admin login
+                value:
+                  email: admin@threadline.com
+                  password: adminpass123
+      responses:
+        '200':
+          description: Login successful
+          headers:
+            Set-Cookie:
+              description: httpOnly refresh token cookie (7 days)
+              schema:
+                type: string
+                example: refreshToken=eyJ...; HttpOnly; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginResponse'
+              example:
+                success: true
+                message: Login successful
+                data:
+                  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY0YWJjMTIzIiwicm9sZSI6InVzZXIifQ.signature
+                  user:
+                    id: 64abc123def456789012
+                    name: Arjun Mehta
+                    email: arjun@example.com
+                    role: user
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              example:
+                success: false
+                message: Invalid email or password
+                status: 401
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      description: |
+        Uses the `refreshToken` httpOnly cookie to issue a new access token.
+        The refresh token is **rotated** on every call — old token is invalidated.
+        No request body needed; the cookie is sent automatically by the browser.
+      security: []
+      responses:
+        '200':
+          description: Token refreshed
+          content:
+            application/json:
+              example:
+                success: true
+                message: Token refreshed
+                data:
+                  accessToken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.newtoken.signature
+        '401':
+          description: Missing or invalid refresh token
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (clears refresh token cookie)
+      security: []
+      responses:
+        '200':
+          description: Logged out successfully
+          content:
+            application/json:
+              example:
+                success: true
+                message: Logged out successfully
+                data: null
+
+  /auth/google:
+    get:
+      tags: [Auth]
+      summary: Start Google OAuth flow
+      description: Redirects to Google login. On success, redirects back to frontend with a one-time auth code.
+      security: []
+      responses:
+        '302':
+          description: Redirect to Google
+
+  # ═══════════════════════════════════════════════════════════
+  # PRODUCTS
+  # ═══════════════════════════════════════════════════════════
   /products:
     get:
-      summary: Get all products
+      tags: [Products]
+      summary: Get all products (paginated)
+      security: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
       responses:
         '200':
-          description: Success
-  /users/register:
+          description: Products fetched
+          content:
+            application/json:
+              example:
+                success: true
+                message: Products fetched successfully
+                data:
+                  items:
+                    - _id: 64abc123def456789012
+                      name: Classic White Oxford Shirt
+                      slug: classic-white-oxford-shirt
+                      basePrice: 1299
+                      gender: men
+                  total: 42
+                  page: 1
+                  limit: 20
+
     post:
-      summary: Register a new user
+      tags: [Products]
+      summary: Create product (admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [name, slug, basePrice, category]
+              properties:
+                name:
+                  type: string
+                  example: Classic White Oxford Shirt
+                slug:
+                  type: string
+                  example: classic-white-oxford-shirt
+                basePrice:
+                  type: number
+                  example: 1299
+                category:
+                  type: string
+                  example: 64abc123def456789013
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
       responses:
-        '200':
-          description: Success
-  /users/login:
+        '201':
+          description: Product created
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /products/filter:
     post:
-      summary: Login
+      tags: [Products]
+      summary: Filter products
+      security: []
+      requestBody:
+        content:
+          application/json:
+            example:
+              gender: men
+              fitType: slim
+              minPrice: 500
+              maxPrice: 2000
+              category: 64abc123def456789013
       responses:
         '200':
-          description: Success
-  /orders:
+          description: Filtered products returned
+
+  /products/{id}:
     get:
-      summary: Get all orders
+      tags: [Products]
+      summary: Get product by ID
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          example: 64abc123def456789012
       responses:
         '200':
-          description: Success
+          description: Product fetched
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags: [Products]
+      summary: Update product (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            example:
+              basePrice: 1499
+              isActive: true
+      responses:
+        '200':
+          description: Product updated
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+    delete:
+      tags: [Products]
+      summary: Delete product (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Product deleted
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /products/{id}/recommendations:
+    get:
+      tags: [Products]
+      summary: Get recommended products
+      security: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Recommendations fetched
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  productId: 64abc123def456789012
+                  count: 6
+                  recommendations: []
+
+  /products/{productId}/reviews:
+    get:
+      tags: [Products]
+      summary: Get product reviews
+      security: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reviews fetched
+
+    post:
+      tags: [Products]
+      summary: Add a review (auth required)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: productId
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                rating:
+                  type: integer
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+                comment:
+                  type: string
+                  example: Great fit and quality fabric
+                image:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Review added
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ═══════════════════════════════════════════════════════════
+  # SEARCH
+  # ═══════════════════════════════════════════════════════════
+  /search:
+    get:
+      tags: [Search]
+      summary: Search products by text
+      security: []
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+            minLength: 2
+          example: oxford shirt
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  query: oxford shirt
+                  count: 3
+                  cached: false
+                  responseTimeMs: 42
+                  results:
+                    - id: 64abc123def456789012
+                      name: Classic White Oxford Shirt
+                      slug: classic-white-oxford-shirt
+                      basePrice: 1299
+                      thumbnail: https://res.cloudinary.com/threadline/image/upload/shirt.jpg
+        '400':
+          description: Query too short (min 2 chars)
+
+  # ═══════════════════════════════════════════════════════════
+  # CART
+  # ═══════════════════════════════════════════════════════════
+  /cart:
+    get:
+      tags: [Cart]
+      summary: Get cart
+      description: |
+        Pass either a Bearer token (logged-in user) or `x-session-id` header (guest).
+      security:
+        - BearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: x-session-id
+          schema:
+            type: string
+          description: Guest session ID (use if not logged in)
+          example: sess_550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Cart fetched
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  _id: 64abc123def456789016
+                  items:
+                    - variant: 64abc123def456789014
+                      quantity: 2
+
+  /cart/add:
+    post:
+      tags: [Cart]
+      summary: Add item to cart
+      security:
+        - BearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: x-session-id
+          schema:
+            type: string
+          example: sess_550e8400-e29b-41d4-a716-446655440000
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variantId]
+              properties:
+                variantId:
+                  type: string
+                  example: 64abc123def456789014
+                quantity:
+                  type: integer
+                  minimum: 1
+                  maximum: 10
+                  default: 1
+                  example: 1
+      responses:
+        '201':
+          description: Item added to cart
+        '400':
+          description: Invalid quantity or variant not found
+        '404':
+          description: Variant not found
+
+  /cart/update:
+    patch:
+      tags: [Cart]
+      summary: Update cart item quantity (set to 0 to remove)
+      security:
+        - BearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: x-session-id
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variantId, quantity]
+              properties:
+                variantId:
+                  type: string
+                  example: 64abc123def456789014
+                quantity:
+                  type: integer
+                  minimum: 0
+                  example: 3
+      responses:
+        '200':
+          description: Cart updated
+
+  /cart/remove:
+    delete:
+      tags: [Cart]
+      summary: Remove item from cart
+      security:
+        - BearerAuth: []
+        - {}
+      parameters:
+        - in: header
+          name: x-session-id
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [variantId]
+              properties:
+                variantId:
+                  type: string
+                  example: 64abc123def456789014
+      responses:
+        '200':
+          description: Item removed
+
+  /cart/merge:
+    post:
+      tags: [Cart]
+      summary: Merge guest cart into user cart (call after login)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sessionId]
+              properties:
+                sessionId:
+                  type: string
+                  example: sess_550e8400-e29b-41d4-a716-446655440000
+      responses:
+        '200':
+          description: Cart merged
+
+  # ═══════════════════════════════════════════════════════════
+  # ORDERS
+  # ═══════════════════════════════════════════════════════════
+  /orders:
+    post:
+      tags: [Orders]
+      summary: Create order from cart
+      description: Requires auth. Creates an order from the current user's cart and clears the cart.
+      security:
+        - BearerAuth: []
+      responses:
+        '201':
+          description: Order placed
+          content:
+            application/json:
+              example:
+                success: true
+                message: Order placed successfully
+                data:
+                  _id: 64abc123def456789015
+                  totalAmount: 2598
+                  statusHistory:
+                    - status: placed
+        '400':
+          description: Cart is empty
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+    get:
+      tags: [Orders]
+      summary: Get order history (current user)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 10
+      responses:
+        '200':
+          description: Orders fetched
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /orders/{id}:
+    get:
+      tags: [Orders]
+      summary: Get order by ID (owner only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order fetched
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /orders/{id}/status:
+    patch:
+      tags: [Orders]
+      summary: Update order status (admin only)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  type: string
+                  enum: [placed, paid, shipped, delivered, cancelled]
+                  example: shipped
+      responses:
+        '200':
+          description: Status updated
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /orders/{id}/cancel:
+    post:
+      tags: [Orders]
+      summary: Cancel order (owner only, not if shipped/delivered)
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Order cancelled
+        '400':
+          description: Cannot cancel shipped or delivered order
+
+  # ═══════════════════════════════════════════════════════════
+  # PAYMENT
+  # ═══════════════════════════════════════════════════════════
+  /payment/create-intent:
+    post:
+      tags: [Payment]
+      summary: Create Razorpay payment intent
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [orderId]
+              properties:
+                orderId:
+                  type: string
+                  example: 64abc123def456789015
+      responses:
+        '201':
+          description: Payment intent created
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  razorpayOrderId: order_ABC123xyz
+                  amount: 259800
+                  currency: INR
+                  orderId: 64abc123def456789015
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payment/confirm:
+    post:
+      tags: [Payment]
+      summary: Confirm Razorpay payment
+      description: Verifies the Razorpay signature and marks the order as paid.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [razorpayOrderId, razorpayPaymentId, razorpaySignature, orderId]
+              properties:
+                razorpayOrderId:
+                  type: string
+                  example: order_ABC123xyz
+                razorpayPaymentId:
+                  type: string
+                  example: pay_DEF456uvw
+                razorpaySignature:
+                  type: string
+                  example: abc123signatureHash
+                orderId:
+                  type: string
+                  example: 64abc123def456789015
+      responses:
+        '200':
+          description: Payment confirmed, order marked paid
+        '400':
+          description: Invalid payment signature
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /payment/webhook:
+    post:
+      tags: [Payment]
+      summary: Razorpay webhook (internal — do not call manually)
+      description: |
+        Receives events from Razorpay. Validates HMAC-SHA256 signature.
+        Handles `payment.captured` and `payment.failed` events.
+        Always returns 200 to prevent Razorpay retries.
+      security: []
+      parameters:
+        - in: header
+          name: x-razorpay-signature
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook received
+
+  /payment/refund:
+    post:
+      tags: [Payment]
+      summary: Initiate refund (admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [paymentId]
+              properties:
+                paymentId:
+                  type: string
+                  example: pay_DEF456uvw
+                amount:
+                  type: number
+                  description: Partial refund amount in INR. Omit for full refund.
+                  example: 1299
+      responses:
+        '200':
+          description: Refund initiated
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ═══════════════════════════════════════════════════════════
+  # WISHLIST
+  # ═══════════════════════════════════════════════════════════
+  /wishlist:
+    get:
+      tags: [Wishlist]
+      summary: Get current user's wishlist
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Wishlist fetched
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /wishlist/add:
+    post:
+      tags: [Wishlist]
+      summary: Add product to wishlist
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId:
+                  type: string
+                  example: 64abc123def456789012
+      responses:
+        '200':
+          description: Added to wishlist
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /wishlist/remove:
+    delete:
+      tags: [Wishlist]
+      summary: Remove product from wishlist
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [productId]
+              properties:
+                productId:
+                  type: string
+                  example: 64abc123def456789012
+      responses:
+        '200':
+          description: Removed from wishlist
+
+  # ═══════════════════════════════════════════════════════════
+  # USERS
+  # ═══════════════════════════════════════════════════════════
+  /users/me:
+    get:
+      tags: [Users]
+      summary: Get current user profile
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Profile fetched
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  id: 64abc123def456789012
+                  name: Arjun Mehta
+                  email: arjun@example.com
+                  role: user
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /users/me/addresses:
+    get:
+      tags: [Users]
+      summary: Get saved addresses
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Addresses fetched
+
+    post:
+      tags: [Users]
+      summary: Add a new address
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              street: 12 Park Street
+              city: Kolkata
+              state: West Bengal
+              zipCode: "700016"
+              country: India
+              isDefault: true
+      responses:
+        '201':
+          description: Address added
+
+  # ═══════════════════════════════════════════════════════════
+  # CATEGORIES
+  # ═══════════════════════════════════════════════════════════
+  /categories:
+    get:
+      tags: [Categories]
+      summary: Get all categories
+      security: []
+      responses:
+        '200':
+          description: Categories fetched
+
+    post:
+      tags: [Categories]
+      summary: Create category (admin only)
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Shirts
+              slug: shirts
+      responses:
+        '201':
+          description: Category created
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ═══════════════════════════════════════════════════════════
+  # ANALYTICS
+  # ═══════════════════════════════════════════════════════════
+  /analytics/events:
+    post:
+      tags: [Analytics]
+      summary: Log analytics event
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              eventType: page_view
+              page: /products/classic-white-oxford-shirt
+              userId: 64abc123def456789012
+      responses:
+        '201':
+          description: Event logged
+
+  /analytics/summary:
+    get:
+      tags: [Analytics]
+      summary: Get analytics summary (admin only)
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Summary fetched
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+tags:
+  - name: Auth
+    description: Register, login, token refresh, Google OAuth
+  - name: Products
+    description: Browse, filter, search, manage products
+  - name: Search
+    description: Full-text product search
+  - name: Cart
+    description: Guest and authenticated cart management
+  - name: Orders
+    description: Place and manage orders
+  - name: Payment
+    description: Razorpay payment flow
+  - name: Wishlist
+    description: Save products for later
+  - name: Users
+    description: Profile and address management
+  - name: Categories
+    description: Product categories
+  - name: Analytics
+    description: Event tracking and reporting

@@ -7,8 +7,8 @@ module.exports = {
   nodeEnv: process.env.NODE_ENV || 'development',
   isProduction,
   // Secrets - must be set in environment
-  jwtSecret: process.env.JWT_SECRET || 'test_jwt_secret_fallback',
-jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || 'test_refresh_secret_fallback',
+  jwtSecret: process.env.JWT_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('JWT_SECRET not set'); })() : 'test_jwt_secret_fallback'),
+jwtRefreshSecret: process.env.JWT_REFRESH_SECRET || (process.env.NODE_ENV === 'production' ? (() => { throw new Error('JWT_REFRESH_SECRET not set'); })() : 'test_refresh_secret_fallback'),
   mongoUri: process.env.MONGODB_URI,
   redisUrl: process.env.REDIS_URL,
   sentryDsn: process.env.SENTRY_DSN,
