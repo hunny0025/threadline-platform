@@ -56,10 +56,17 @@ function App() {
         <BrowserRouter>
         <ErrorBoundary>
           <div className="app min-h-screen bg-white font-body text-zinc-900 pt-16 flex flex-col">
+            {/* Skip Navigation Link */}
+            <a
+              href="#main-content"
+              className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[200] focus:px-4 focus:py-2 focus:bg-violet-600 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium"
+            >
+              Skip to main content
+            </a>
             <RouteLoadingBar variant="primary" size="sm" showShimmer />
             <Header />
 
-            <main className="flex-1">
+            <main id="main-content" className="flex-1">
               <AnimatedRoutes />
             </main>
 

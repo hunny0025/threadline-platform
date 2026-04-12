@@ -4,9 +4,10 @@ import { ArrowUpRight } from "lucide-react";
 /**
  * Interactive Lookbook Grid
  * Displays a masonry-style or varied block layout of lifestyle imagery.
- * Hovering reveals product tags which can be clicked to go to the PDP.
+ * Hovering or focusing reveals product tags which can be clicked to go to the PDP.
  */
 export default function LookbookGrid() {
+  const [focusedTag, setFocusedTag] = useState(null);
   // Mock Lookbook data
   const looks = [
     {
@@ -71,6 +72,7 @@ export default function LookbookGrid() {
           <div
             key={look.id}
             className={`relative group overflow-hidden rounded-2xl bg-zinc-100 ${look.colSpan} ${look.rowSpan}`}
+            aria-label={`Lookbook: ${look.title}`}
           >
             {/* Background Image */}
             <img
@@ -92,19 +94,26 @@ export default function LookbookGrid() {
             {/* Product Tags Container - fades in on hover */}
             <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none group-hover:pointer-events-auto">
               {look.products.map((product) => (
-                <div
-                  key={product.id}
-                  className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: product.x, top: product.y }}
-                >
-                  {/* The Tag Dot */}
-                  <div className="relative group/tag">
-                    <div className="w-4 h-4 rounded-full bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.3)] animate-pulse" />
+                  <div key={product.id} className="relative group/tag">
+                    {/* The Tag Dot — keyboard accessible */}
+                    <button
+                      className="absolute transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white shadow-[0_0_0_4px_rgba(255,255,255,0.3)] animate-pulse cursor-pointer border-none p-0"
+                      style={{ left: product.x, top: product.y }}
+                      aria-label={`View ${product.name} - ${product.price}`}
+                      onFocus={() => setFocusedTag(product.id)}
+                      onBlur={() => setFocusedTag(null)}
+                    />
                     
                     {/* The Tag Content Card */}
                     <a
                       href={`/product/${product.id}`}
-                      className="absolute left-1/2 bottom-full mb-3 -translate-x-1/2 w-max bg-white rounded-xl shadow-xl p-3 flex items-center gap-4 opacity-0 translate-y-2 pointer-events-none group-hover/tag:opacity-100 group-hover/tag:translate-y-0 group-hover/tag:pointer-events-auto transition-all duration-300 ease-out z-10"
+                      className={`absolute bottom-full mb-3 w-max bg-white rounded-xl shadow-xl p-3 flex items-center gap-4 transition-all duration-300 ease-out z-10 ${
+                        focusedTag === product.id
+                          ? 'opacity-100 translate-y-0 pointer-events-auto'
+                          : 'opacity-0 translate-y-2 pointer-events-none group-hover/tag:opacity-100 group-hover/tag:translate-y-0 group-hover/tag:pointer-events-auto'
+                      }`}
+                      style={{ left: product.x, top: product.y, transform: 'translate(-50%, -100%)' }}
+                      tabIndex={focusedTag === product.id ? 0 : -1}
                     >
                       <div className="text-left">
                         <p className="text-sm font-bold text-zinc-900">
@@ -122,7 +131,6 @@ export default function LookbookGrid() {
                       <div className="absolute left-1/2 top-full -translate-x-1/2 -mt-1 w-2 h-2 bg-white rotate-45" />
                     </a>
                   </div>
-                </div>
               ))}
             </div>
           </div>

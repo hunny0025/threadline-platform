@@ -73,7 +73,7 @@ export function Footer() {
                   You're in! Watch your inbox for exclusive drops.
                 </p>
               ) : (
-                <form onSubmit={handleSubscribe} className="flex gap-2">
+                <form onSubmit={handleSubscribe} className="flex gap-2" aria-label="Newsletter signup">
                   <Input
                     type="email"
                     placeholder="Enter your email"

@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { X, Trash2, Plus, Minus, ShoppingBag, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "../ui";
 
 export function CartDrawer({
@@ -13,6 +13,31 @@ export function CartDrawer({
 }) {
   const navigate = useNavigate();
   const [loadingId, setLoadingId] = useState(null);
+  const drawerRef = useRef(null);
+
+  // ── Focus trap for cart drawer ──────────────────────────
+  useEffect(() => {
+    if (!isOpen) return;
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+    const focusableEls = drawer.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusableEls[0];
+    const last = focusableEls[focusableEls.length - 1];
+    const handleTrap = (e) => {
+      if (e.key === 'Escape') { onClose(); return; }
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    drawer.addEventListener('keydown', handleTrap);
+    setTimeout(() => first?.focus(), 100);
+    return () => drawer.removeEventListener('keydown', handleTrap);
+  }, [isOpen, onClose]);
 
   // Calculate totals
   const subtotal = cartItems.reduce(
@@ -62,6 +87,7 @@ export function CartDrawer({
 
           {/* Drawer */}
           <motion.div
+            ref={drawerRef}
             className="fixed top-0 right-0 h-full w-full sm:w-[480px] bg-white z-[110] shadow-2xl flex flex-col"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
@@ -71,6 +97,9 @@ export function CartDrawer({
               ease: [0.43, 0.13, 0.23, 0.96],
               duration: 0.4,
             }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Shopping cart"
           >
             {/* Header */}
             <div className="flex items-center justify-between px-6 py-5 border-b border-zinc-200">
@@ -179,11 +208,11 @@ export function CartDrawer({
                               </button>
                             </div>
 
-                            {/* Remove Button */}
                             <button
                               onClick={() => handleRemoveItem(item.variantId)}
                               disabled={isItemLoading}
                               className="text-sm font-medium text-zinc-400 hover:text-red-500 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                              aria-label={`Remove ${item.title}`}
                             >
                               <Trash2 className="h-4 w-4" />
                               <span className="sr-only sm:not-sr-only">Remove</span>

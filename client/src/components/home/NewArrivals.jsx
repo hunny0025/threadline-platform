@@ -156,6 +156,8 @@ function ProductCard({ product }) {
 
         <button
           onClick={() => setWishlisted(!wishlisted)}
+          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-pressed={wishlisted}
           style={{
             position: "absolute",
             top: "7px",
@@ -259,11 +261,12 @@ export default function NewArrivals() {
           </button>
         </div>
 
-        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
+        <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }} role="group" aria-label="Product filters">
           {filters.map((f) => (
             <button
               key={f}
               onClick={() => setActiveFilter(f)}
+              aria-pressed={activeFilter === f}
               style={{
                 borderRadius: "9999px",
                 fontSize: "11px",
@@ -288,7 +291,7 @@ export default function NewArrivals() {
         style={{
           display: "grid",
           gridAutoFlow: "column",
-          gridAutoColumns: "minmax(220px, 1fr)",
+          gridAutoColumns: "minmax(160px, 1fr)",
           gap: "14px",
           overflowX: "auto",
           padding: "0 clamp(16px,3vw,40px) 20px",

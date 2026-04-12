@@ -231,3 +231,36 @@
     max-width: 320px;
   }
 }
+
+/* ── SocialProofStrip Responsive Grid ───────────────────── */
+.tl-proof-grid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+@media (min-width: 768px) {
+  .tl-proof-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Consolidated Keyframes ─────────────────────────────── */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes bpulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.8); }
+}
+
+/* ── Reduced Motion Preferences ─────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .tl-marquee-track {
+    animation: none !important;
+  }
+
+  @keyframes bpulse {
+    0%, 100% { transform: scale(1); }
+  }
+}
