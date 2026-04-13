@@ -254,6 +254,67 @@ describe('GET /api/v1/analytics/summary', () => {
       .expect(401);
   });
 
-  test.todo('returns summary data for authenticated admin');
-  test.todo('respects ?days query param for windowing');
+  test('returns summary data for authenticated admin', async () => {
+    // Generate a valid admin JWT for the test
+    const jwt = require('jsonwebtoken');
+    const { jwtSecret } = require('../src/config');
+    const secret = jwtSecret || 'test_jwt_secret_fallback';
+    const adminToken = jwt.sign(
+      { id: new mongoose.Types.ObjectId().toString(), role: 'admin', email: 'admin@threadline.com' },
+      secret,
+      { expiresIn: '1h' }
+    );
+
+    const res = await request(app)
+      .get('/api/v1/analytics/summary')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data).toHaveProperty('eventCounts');
+    expect(res.body.data).toHaveProperty('topProducts');
+    expect(res.body.data).toHaveProperty('deviceBreakdown');
+    expect(res.body.data).toHaveProperty('dailyVolume');
+    expect(res.body.data).toHaveProperty('window');
+
+    // Verify the seeded data is reflected in aggregations
+    const eventTypes = res.body.data.eventCounts.map(e => e._id);
+    expect(eventTypes).toContain('page_view');
+    expect(eventTypes).toContain('product_click');
+    expect(eventTypes).toContain('cart_add');
+  });
+
+  test('respects ?days query param for windowing', async () => {
+    const jwt = require('jsonwebtoken');
+    const { jwtSecret } = require('../src/config');
+    const secret = jwtSecret || 'test_jwt_secret_fallback';
+    const adminToken = jwt.sign(
+      { id: new mongoose.Types.ObjectId().toString(), role: 'admin', email: 'admin@threadline.com' },
+      secret,
+      { expiresIn: '1h' }
+    );
+
+    // Request a 7-day window
+    const res = await request(app)
+      .get('/api/v1/analytics/summary?days=7')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(res.body.success).toBe(true);
+    expect(res.body.data.window.days).toBe(7);
+
+    // The 'since' date should be roughly 7 days ago
+    const sinceDate = new Date(res.body.data.window.since);
+    const expectedSince = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const diffMs = Math.abs(sinceDate.getTime() - expectedSince.getTime());
+    expect(diffMs).toBeLessThan(5000); // within 5 seconds tolerance
+
+    // Default (no param) should be 30 days
+    const resDefault = await request(app)
+      .get('/api/v1/analytics/summary')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .expect(200);
+
+    expect(resDefault.body.data.window.days).toBe(30);
+  });
 });
