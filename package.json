@@ -9,7 +9,13 @@
         "seed": "node src/scripts/seed.js",
         "lint": "eslint .",
         "test": "cross-env NODE_ENV=test jest",
-        "build": "echo \"Build step placeholder\""
+        "build": "echo \"Build step placeholder\"",
+        "preflight": "node scripts/preflight.js",
+        "release": "node scripts/release.js",
+        "release:patch": "node scripts/release.js patch",
+        "release:minor": "node scripts/release.js minor",
+        "release:major": "node scripts/release.js major",
+        "lighthouse": "npx @lhci/cli autorun --config=lighthouserc.js"
     },
     "jest": {
         "testPathIgnorePatterns": [

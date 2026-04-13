@@ -7,27 +7,83 @@ on:
     branches: [ main ]
 
 jobs:
-  ci:
+  # ── Backend: lint + tests ──────────────────────────────────
+  backend:
+    name: Backend (Node.js)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: Setup Node.js 18
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install backend dependencies
         run: npm ci
 
       - name: Run ESLint
         run: npm run lint
 
-      - name: Run unit tests
+      - name: Run backend unit tests
+        run: npm test
+        env:
+          NODE_ENV: test
+
+      - name: Pre-flight env check (CI mode)
+        run: node scripts/preflight.js || true
+        env:
+          NODE_ENV: staging
+          MONGODB_URI: mongodb://localhost:27017/threadline_test
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci_jwt_secret_placeholder_32chars_ok
+          JWT_REFRESH_SECRET: ci_refresh_secret_placeholder_32ch
+          SESSION_SECRET: ci_session_secret_placeholder_32ch
+          ALLOWED_ORIGINS: http://localhost:5173
+
+  # ── Frontend: build + Lighthouse CI ───────────────────────
+  frontend:
+    name: Frontend (Vite + Lighthouse)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: client/package-lock.json
+
+      - name: Install client dependencies
+        working-directory: ./client
+        run: npm ci
+
+      - name: Run client unit tests
+        working-directory: ./client
         run: npm test
 
-      - name: Build project
+      - name: Build production bundle
+        working-directory: ./client
         run: npm run build
+        env:
+          VITE_API_URL: https://threadline-platform-production.up.railway.app
+
+      - name: Run bundle analyzer (size check)
+        working-directory: ./client
+        run: |
+          du -sh dist/
+          find dist/assets -name "*.js" | sort -k1 -h
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse CI
+        working-directory: ./client
+        run: lhci autorun --config=../lighthouserc.js
+        continue-on-error: true
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
