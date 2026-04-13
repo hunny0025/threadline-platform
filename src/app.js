@@ -50,7 +50,18 @@ app.use(helmet({
     includeSubDomains: true,
     preload: true,
   },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  crossOriginEmbedderPolicy: false, // Allow Cloudinary images
 }));
+
+// Permissions-Policy header (Task 4 — replaces deprecated Feature-Policy)
+app.use((req, res, next) => {
+  res.setHeader(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=(), interest-cohort=(), payment=(self), fullscreen=(self)'
+  );
+  next();
+});
 
 // Force HTTPS (Task 4)
 if (process.env.NODE_ENV === 'production' || process.env.NODE_ENV === 'staging') {
