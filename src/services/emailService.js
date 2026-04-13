@@ -3,6 +3,7 @@ const orderConfirmationTemplate = require('../templates/orderConfirmation');
 const shippingUpdateTemplate = require('../templates/shippingUpdate');
 const passwordResetTemplate = require('../templates/passwordReset');
 const lowStockAlertTemplate = require('../templates/lowStockAlert');
+const welcomeNewsletterTemplate = require('../templates/welcomeNewsletter');
 
 // Create transporter
 const transporter = nodemailer.createTransport({
@@ -57,9 +58,16 @@ const sendLowStockAlert = async (product, variant, stock) => {
   return sendEmail(adminEmail, subject, html);
 };
 
+// Send welcome newsletter email to new subscriber
+const sendWelcomeNewsletter = async (email) => {
+  const { subject, html } = welcomeNewsletterTemplate(email);
+  return sendEmail(email, subject, html);
+};
+
 module.exports = {
   sendOrderConfirmation,
   sendShippingUpdate,
   sendPasswordReset,
   sendLowStockAlert,
+  sendWelcomeNewsletter,
 };

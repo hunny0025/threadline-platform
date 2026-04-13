@@ -1,5 +1,7 @@
 const Newsletter = require('../models/Newsletter');
 const { sendSuccess, sendError } = require('../utils/response');
+const { sendWelcomeNewsletter } = require('../services/emailService');
+const logger = require('../utils/logger');
 
 // POST /newsletter/subscribe
 exports.subscribe = async (req, res) => {
@@ -26,12 +28,19 @@ exports.subscribe = async (req, res) => {
     // Step 4 — Save new subscriber to DB
     const subscriber = await Newsletter.create({ email });
 
-    // Step 5 — Welcome email stub
-    // TODO: Integrate with email service (Nodemailer / SendGrid)
-    // For now we just log it — real email sending comes later
-    console.log(`📧 Welcome email stub — would send to: ${email}`);
-    console.log(`   Subject: Welcome to Threadline Newsletter!`);
-    console.log(`   Body: Thank you for subscribing. Expect style updates soon.`);
+    // Step 5 — Send welcome email via Nodemailer
+    try {
+      const emailResult = await sendWelcomeNewsletter(email);
+      if (emailResult.success) {
+        logger.info(`📧 Welcome newsletter sent to ${email} (messageId: ${emailResult.messageId})`);
+      } else {
+        // Email failed but subscription still saved — log and continue
+        logger.warn(`📧 Welcome email failed for ${email}: ${emailResult.error}`);
+      }
+    } catch (emailErr) {
+      // Non-blocking — subscription succeeds even if email delivery fails
+      logger.warn(`📧 Email service error for ${email}: ${emailErr.message}`);
+    }
 
     // Step 6 — Return success response
     sendSuccess(
