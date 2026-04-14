@@ -74,6 +74,75 @@ Every intern/team member **must** set these in their local `.env` file from the 
 | `JWT_REFRESH_SECRET` | **MANDATORY** for login & refresh sessions |
 | `SESSION_SECRET` | Used for Passport.js / Google OAuth sessions |
 
+---
+
+## 🔐 Environment Variables — Full Reference
+
+Copy `.env.example` → `.env` and fill in all values. Full reference:
+
+| Variable | Required | Description |
+| :--- | :--- | :--- |
+| `PORT` | ✅ | Server port (default: 3000) |
+| `NODE_ENV` | ✅ | `development` / `staging` / `production` |
+| `MONGODB_URI` | ✅ | MongoDB connection string |
+| `REDIS_URL` | ✅ | Redis connection URL |
+| `JWT_SECRET` | ✅ | Access token secret (min 32 chars) |
+| `JWT_REFRESH_SECRET` | ✅ | Refresh token secret — must differ from JWT_SECRET |
+| `SESSION_SECRET` | ✅ | Passport session secret (min 32 chars) |
+| `GOOGLE_CLIENT_ID` | ⚠️ OAuth only | Google Cloud Console credentials |
+| `GOOGLE_CLIENT_SECRET` | ⚠️ OAuth only | Google Cloud Console credentials |
+| `GOOGLE_CALLBACK_URL` | ⚠️ OAuth only | Auth callback URL |
+| `ALLOWED_ORIGINS` | ✅ | Comma-separated CORS origins |
+| `RAZORPAY_KEY_ID` | ⚠️ Payments only | Razorpay dashboard test/live key |
+| `RAZORPAY_KEY_SECRET` | ⚠️ Payments only | Razorpay dashboard test/live secret |
+| `EMAIL_HOST` | ⚠️ Email only | SMTP host (use `smtp.ethereal.email` for dev) |
+| `EMAIL_PORT` | ⚠️ Email only | SMTP port (587) |
+| `EMAIL_USER` | ⚠️ Email only | SMTP username |
+| `EMAIL_PASS` | ⚠️ Email only | SMTP password |
+| `ADMIN_EMAIL` | ⚠️ Email only | Receives admin notifications |
+| `AWS_ACCESS_KEY_ID` | ❌ Optional | AWS IAM key for S3 backups |
+| `AWS_SECRET_ACCESS_KEY` | ❌ Optional | AWS IAM secret |
+| `AWS_REGION` | ❌ Optional | e.g. `ap-south-1` |
+| `S3_BUCKET_NAME` | ❌ Optional | e.g. `threadline-backups` |
+| `NEW_RELIC_LICENSE_KEY` | ❌ Optional | APM monitoring (leave blank to disable) |
+
+> **Dev tip:** For email testing, create a free inbox at [ethereal.email](https://ethereal.email) — no real emails are sent.
+
+---
+
+## 🧑‍💻 Local Development — API Setup
+
+### Prerequisites
+- Node.js 18+
+- MongoDB running locally or via Docker
+- Redis running locally or via Docker
+
+### Steps
+
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Setup env
+cp .env.example .env
+# Edit .env — at minimum set MONGODB_URI, REDIS_URL, JWT_SECRET, JWT_REFRESH_SECRET, SESSION_SECRET
+
+# 3. Seed the database (optional)
+npm run seed
+
+# 4. Start dev server
+npm run dev
+# API runs at http://localhost:3000
+# Swagger docs at http://localhost:3000/api/docs
+# Health check at http://localhost:3000/health
+```
+
+### Verify it's working
+```bash
+curl http://localhost:3000/health
+# Expected: { "status": "OK", ... }
+```
+
 ### 🌐 Social Auth (Google)
 | Variable | Usage |
 | :--- | :--- |
