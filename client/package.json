@@ -32,11 +32,12 @@
     "@testing-library/user-event": "^14.6.1",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.27",
+    "happy-dom": "^20.9.0",
     "jsdom": "^28.1.0",
     "postcss": "^8.5.8",
     "rollup-plugin-visualizer": "5.12.0",
     "tailwindcss": "^4.2.1",
-    "vite": "^5.1.0",
-    "vitest": "^4.1.4"
+    "vite": "^5.4.0",
+    "vitest": "^2.0.0"
   }
 }
