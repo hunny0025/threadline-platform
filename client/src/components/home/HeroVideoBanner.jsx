@@ -29,7 +29,7 @@ export function HeroVideoBanner() {
   };
 
   return (
-    <section className="relative w-full h-[85vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-zinc-950">
+    <section className="relative w-full h-[85vh] min-h-[480px] md:min-h-[600px] flex items-center justify-center overflow-hidden bg-zinc-950">
       {/* Video Background Layer */}
       <div className="absolute inset-0 z-0">
         {/*

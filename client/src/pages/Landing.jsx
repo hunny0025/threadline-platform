@@ -145,13 +145,14 @@ export function Landing() {
             {/* Popular Searches */}
             <motion.div variants={itemVariants} className="mb-12">
               <p className="text-sm text-neutral-500 mb-3">Popular searches:</p>
-              <div className="flex flex-wrap justify-center gap-2">
+              <div className="flex flex-wrap justify-center gap-2" role="group" aria-label="Popular searches">
                 {popularSearches.map((search) => (
-                  <button
-                    key={search}
-                    onClick={() => handlePopularSearchClick(search)}
-                    className="px-3 py-1.5 text-sm bg-white border border-neutral-200 rounded-full text-neutral-700 hover:border-violet-300 hover:text-violet-600 transition-colors"
-                  >
+                    <button
+                      key={search}
+                      onClick={() => handlePopularSearchClick(search)}
+                      className="px-3 py-1.5 text-sm bg-white border border-neutral-200 rounded-full text-neutral-700 hover:border-violet-300 hover:text-violet-600 transition-colors"
+                      aria-label={`Search for ${search}`}
+                    >
                     {search}
                   </button>
                 ))}
@@ -304,6 +305,7 @@ export function Landing() {
                 whileHover={{ scale: 1.02 }}
                 className="group relative overflow-hidden rounded-lg bg-white shadow-sm aspect-square"
                 onClick={() => handlePopularSearchClick(category.name)}
+                aria-label={`Shop ${category.name}`}
               >
                 <img
                   src={category.image}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, Suspense, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { PackageOpen, Search, SlidersHorizontal } from "lucide-react";
+import { PackageOpen, Search, SlidersHorizontal, X } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { useDebounce } from "../hooks/useDebounce";
 import { ProductGrid } from "../components/catalog/ProductGrid";
 import { ProductCard } from "../components/catalog/ProductCard";
@@ -113,6 +114,18 @@ function CatalogGridContent() {
     ...FILTER_KEYS.reduce((acc, k) => ({ ...acc, [k]: true }), {}),
   }));
   const [quickLookProduct, setQuickLookProduct] = useState(null);
+  const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = React.useRef(null);
+
+  // Close sort dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (sortRef.current && !sortRef.current.contains(e.target)) setSortOpen(false);
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // ── Search state ───────────────────────────────────────
   const [searchInput, setSearchInput] = useState(
@@ -303,136 +316,202 @@ function CatalogGridContent() {
     [products],
   );
 
+  // Shared filter content rendered in both desktop sidebar and mobile drawer
+  const renderFilterContent = () => (
+    <>
+      <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
+        <h2 className="text-base font-semibold text-zinc-900 tracking-wide uppercase">
+          Filters
+        </h2>
+        <button
+          type="button"
+          onClick={clearAllFilters}
+          disabled={!hasActiveFilters}
+          className="text-xs font-semibold text-red-600 transition-colors duration-200 hover:text-red-700 disabled:text-zinc-400 disabled:cursor-not-allowed"
+        >
+          Clear all
+        </button>
+      </div>
+
+      <div className="mt-2">
+        {/* Category filter (from API) */}
+        <FilterSection
+          title="Category"
+          isOpen={openSections.category !== false}
+          onToggle={() => toggleSection("category")}
+        >
+          {categoriesLoading ? (
+            <div className="flex gap-2">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-7 w-20 bg-zinc-100 rounded-full animate-pulse"
+                />
+              ))}
+            </div>
+          ) : categoriesError ? (
+            <p className="text-xs text-red-500">Failed to load categories</p>
+          ) : (
+            categories.map((cat) => {
+              const isSelected = activeCategory === cat._id;
+              return (
+                <button
+                  key={cat._id}
+                  type="button"
+                  onClick={() => handleCategoryChange(cat._id)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                    isSelected
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
+                  }`}
+                  aria-pressed={isSelected}
+                >
+                  {cat.name}
+                </button>
+              );
+            })
+          )}
+        </FilterSection>
+
+        {/* Attribute filters */}
+        {FILTER_KEYS.map((key) => (
+          <FilterSection
+            key={key}
+            title={FILTER_TITLES[key]}
+            isOpen={openSections[key]}
+            onToggle={() => toggleSection(key)}
+          >
+            {FILTER_OPTIONS[key].map((value) => {
+              const isSelected = selectedFilters[key].includes(value);
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => toggleFilter(key, value)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors capitalize ${
+                    isSelected
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
+                  }`}
+                  aria-pressed={isSelected}
+                >
+                  {value}
+                </button>
+              );
+            })}
+          </FilterSection>
+        ))}
+
+        {/* Price Range filter */}
+        <FilterSection
+          title="Price Range"
+          isOpen={openSections.price !== false}
+          onToggle={() => toggleSection("price")}
+        >
+          <div className="flex items-center gap-2 w-full">
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Min"
+                value={minPriceInput}
+                onChange={(e) => setMinPriceInput(e.target.value)}
+                onBlur={() => setMinPrice(minPriceInput)}
+                onKeyDown={(e) => { if (e.key === 'Enter') setMinPrice(minPriceInput); }}
+                className="w-full pl-7 pr-2 py-2 text-xs rounded-lg border border-zinc-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+                aria-label="Minimum price"
+              />
+            </div>
+            <span className="text-zinc-400 text-xs">—</span>
+            <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                placeholder="Max"
+                value={maxPriceInput}
+                onChange={(e) => setMaxPriceInput(e.target.value)}
+                onBlur={() => setMaxPrice(maxPriceInput)}
+                onKeyDown={(e) => { if (e.key === 'Enter') setMaxPrice(maxPriceInput); }}
+                className="w-full pl-7 pr-2 py-2 text-xs rounded-lg border border-zinc-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
+                aria-label="Maximum price"
+              />
+            </div>
+          </div>
+        </FilterSection>
+      </div>
+    </>
+  );
+
   return (
     <>
       <Breadcrumb items={breadcrumbItems} className="mb-6" />
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 xl:gap-12">
-        {/* ── Sidebar ───────────────────────────────────────── */}
-        <aside className="lg:sticky lg:top-24 h-fit border border-zinc-200 rounded-xl p-5 bg-white">
-          <div className="flex items-center justify-between pb-4 border-b border-zinc-200">
-            <h2 className="text-base font-semibold text-zinc-900 tracking-wide uppercase">
-              Filters
-            </h2>
-            <button
-              type="button"
-              onClick={clearAllFilters}
-              disabled={!hasActiveFilters}
-              className="text-xs font-semibold text-red-600 transition-colors duration-200 hover:text-red-700 disabled:text-zinc-400 disabled:cursor-not-allowed"
-            >
-              Clear all
-            </button>
-          </div>
+        {/* ── Mobile filter toggle button ────────────────────── */}
+        <div className="lg:hidden col-span-1">
+          <button
+            type="button"
+            onClick={() => setIsMobileFilterOpen(true)}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-zinc-300 text-sm font-medium text-zinc-700 hover:bg-zinc-50 transition-colors"
+            aria-label="Open filters"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Filters
+            {hasActiveFilters && (
+              <span className="flex items-center justify-center w-5 h-5 bg-violet-600 text-white text-xs font-bold rounded-full">
+                !
+              </span>
+            )}
+          </button>
+        </div>
 
-          <div className="mt-2">
-            {/* Category filter (from API) */}
-            <FilterSection
-              title="Category"
-              isOpen={openSections.category !== false}
-              onToggle={() => toggleSection("category")}
-            >
-              {categoriesLoading ? (
-                <div className="flex gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="h-7 w-20 bg-zinc-100 rounded-full animate-pulse"
-                    />
-                  ))}
-                </div>
-              ) : categoriesError ? (
-                <p className="text-xs text-red-500">Failed to load categories</p>
-              ) : (
-                categories.map((cat) => {
-                  const isSelected = activeCategory === cat._id;
-                  return (
-                    <button
-                      key={cat._id}
-                      type="button"
-                      onClick={() => handleCategoryChange(cat._id)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
-                        isSelected
-                          ? "bg-zinc-900 text-white border-zinc-900"
-                          : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
-                      }`}
-                      aria-pressed={isSelected}
-                    >
-                      {cat.name}
-                    </button>
-                  );
-                })
-              )}
-            </FilterSection>
-
-            {/* Attribute filters */}
-            {FILTER_KEYS.map((key) => (
-              <FilterSection
-                key={key}
-                title={FILTER_TITLES[key]}
-                isOpen={openSections[key]}
-                onToggle={() => toggleSection(key)}
+        {/* ── Mobile filter drawer overlay ───────────────────── */}
+        <AnimatePresence>
+          {isMobileFilterOpen && (
+            <>
+              <motion.div
+                className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm lg:hidden"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                onClick={() => setIsMobileFilterOpen(false)}
+              />
+              <motion.aside
+                className="fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white z-[110] shadow-2xl flex flex-col lg:hidden overflow-y-auto"
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "tween", ease: [0.43, 0.13, 0.23, 0.96], duration: 0.4 }}
+                role="dialog"
+                aria-modal="true"
+                aria-label="Product filters"
               >
-                {FILTER_OPTIONS[key].map((value) => {
-                  const isSelected = selectedFilters[key].includes(value);
-                  return (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => toggleFilter(key, value)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors capitalize ${
-                        isSelected
-                          ? "bg-zinc-900 text-white border-zinc-900"
-                          : "bg-white text-zinc-700 border-zinc-300 hover:border-zinc-500"
-                      }`}
-                      aria-pressed={isSelected}
-                    >
-                      {value}
-                    </button>
-                  );
-                })}
-              </FilterSection>
-            ))}
+                <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 sticky top-0 bg-white z-10">
+                  <span className="text-base font-semibold text-zinc-900 tracking-wide uppercase">Filters</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsMobileFilterOpen(false)}
+                    className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors"
+                    aria-label="Close filters"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+                <div className="p-5">
+                  {renderFilterContent()}
+                </div>
+              </motion.aside>
+            </>
+          )}
+        </AnimatePresence>
 
-            {/* Price Range filter */}
-            <FilterSection
-              title="Price Range"
-              isOpen={openSections.price !== false}
-              onToggle={() => toggleSection("price")}
-            >
-              <div className="flex items-center gap-2 w-full">
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    placeholder="Min"
-                    value={minPriceInput}
-                    onChange={(e) => setMinPriceInput(e.target.value)}
-                    onBlur={() => setMinPrice(minPriceInput)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') setMinPrice(minPriceInput); }}
-                    className="w-full pl-7 pr-2 py-2 text-xs rounded-lg border border-zinc-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
-                    aria-label="Minimum price"
-                  />
-                </div>
-                <span className="text-zinc-400 text-xs">—</span>
-                <div className="relative flex-1">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-zinc-400">$</span>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    placeholder="Max"
-                    value={maxPriceInput}
-                    onChange={(e) => setMaxPriceInput(e.target.value)}
-                    onBlur={() => setMaxPrice(maxPriceInput)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') setMaxPrice(maxPriceInput); }}
-                    className="w-full pl-7 pr-2 py-2 text-xs rounded-lg border border-zinc-300 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all"
-                    aria-label="Maximum price"
-                  />
-                </div>
-              </div>
-            </FilterSection>
-          </div>
+        {/* ── Desktop Sidebar ───────────────────────────────── */}
+        <aside className="hidden lg:block lg:sticky lg:top-24 h-fit border border-zinc-200 rounded-xl p-5 bg-white">
+          {renderFilterContent()}
         </aside>
 
         {/* ── Product Grid ──────────────────────────────────── */}
@@ -461,23 +540,62 @@ function CatalogGridContent() {
               )}
             </div>
 
-            {/* Sort dropdown */}
-            <div className="relative">
-              <SlidersHorizontal className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400 pointer-events-none" />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="appearance-none pl-10 pr-8 py-2.5 text-sm rounded-lg border border-zinc-300 bg-white focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all cursor-pointer min-w-[180px]"
-                aria-label="Sort products"
-              >
-                {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400 pointer-events-none">▾</span>
-            </div>
+            {/* Sort dropdown — custom themed */}
+            {(() => {
+              const activeLabel = SORT_OPTIONS.find((o) => o.value === sortBy)?.label || "Sort";
+
+              return (
+                <div className="relative" ref={sortRef}>
+                  <button
+                    type="button"
+                    onClick={() => setSortOpen((v) => !v)}
+                    className="flex items-center gap-2 pl-3 pr-4 py-2.5 text-sm font-medium rounded-xl border border-zinc-200 bg-white hover:border-violet-400 focus:border-violet-500 focus:ring-2 focus:ring-violet-100 outline-none transition-all cursor-pointer min-w-[180px] font-body text-zinc-700"
+                    aria-haspopup="listbox"
+                    aria-expanded={sortOpen}
+                    aria-label="Sort products"
+                  >
+                    <SlidersHorizontal className="h-4 w-4 text-zinc-400 flex-shrink-0" />
+                    <span className="flex-1 text-left truncate">{activeLabel}</span>
+                    <svg
+                      className={`h-4 w-4 text-zinc-400 transition-transform duration-200 ${sortOpen ? "rotate-180" : ""}`}
+                      fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <AnimatePresence>
+                    {sortOpen && (
+                      <motion.ul
+                        initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                        transition={{ duration: 0.15, ease: [0.4, 0, 0.2, 1] }}
+                        className="absolute right-0 top-full mt-2 w-full min-w-[200px] bg-white border border-zinc-200 rounded-xl shadow-xl z-50 py-1 overflow-hidden"
+                        role="listbox"
+                        aria-label="Sort options"
+                      >
+                        {SORT_OPTIONS.map((opt) => (
+                          <li
+                            key={opt.value}
+                            role="option"
+                            aria-selected={sortBy === opt.value}
+                            onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
+                            className={`px-4 py-2.5 text-sm font-body cursor-pointer transition-colors ${
+                              sortBy === opt.value
+                                ? "bg-violet-50 text-violet-700 font-semibold"
+                                : "text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
+                            }`}
+                          >
+                            {opt.label}
+                          </li>
+                        ))}
+                      </motion.ul>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })()}
           </div>
 
           {hasActiveFilters && !isLoading && (

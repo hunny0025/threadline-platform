@@ -1,35 +1,29 @@
 const express = require('express');
 const router = express.Router();
-const { param, body, query } = require('express-validator');
+const { body, param, query } = require('express-validator');
 const auth = require('../middleware/auth');
 const rbac = require('../middleware/rbac');
+const { validate } = require('../middleware/validation');
 const {
   createOrder,
   getOrders,
   getOrderById,
   updateOrderStatus,
   cancelOrder,
+  adminGetOrders,   // ← NEW
 } = require('../controllers/orderController');
-const { validate } = require('../middleware/validation');
 
-// Validation rules
-const orderIdValidation = [
-  param('id').isMongoId().withMessage('Valid order ID required'),
-];
+const orderIdValidation = [param('id').isMongoId().withMessage('Valid order ID required')];
+const statusValidation  = [body('status').notEmpty().withMessage('Status is required')];
 
-const paginationValidation = [
-  query('page').optional().isInt({ min: 1 }).withMessage('Page must be positive integer'),
-  query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be 1-50'),
-];
-
-const statusValidation = [
-  body('status').isIn(['placed', 'paid', 'shipped', 'delivered', 'cancelled']).withMessage('Invalid status'),
-];
-
+// User routes
 router.post('/', auth, createOrder);
-router.get('/', auth, paginationValidation, validate, getOrders);
+router.get('/', auth, getOrders);
 router.get('/:id', auth, orderIdValidation, validate, getOrderById);
-router.patch('/:id/status', auth, rbac('admin'), [...orderIdValidation, ...statusValidation], validate, updateOrderStatus);
 router.post('/:id/cancel', auth, orderIdValidation, validate, cancelOrder);
+
+// Admin routes
+router.patch('/:id/status', auth, rbac('admin'), [...orderIdValidation, ...statusValidation], validate, updateOrderStatus);
+router.get('/admin/all', auth, rbac('admin'), adminGetOrders);  // ← NEW (supports ?exportCsv=true)
 
 module.exports = router;

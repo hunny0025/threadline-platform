@@ -68,6 +68,7 @@ export function StickyAddToCart({ product, variants = [], isVisible }) {
               <button
                 onClick={handleAdd}
                 disabled={addState === 'loading'}
+                aria-label={buttonLabel}
                 className={`flex-shrink-0 flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all duration-200 shadow-md ${
                   addState === 'success'
                     ? 'bg-emerald-600 text-white'

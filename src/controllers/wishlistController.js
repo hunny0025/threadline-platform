@@ -6,7 +6,9 @@ const { sendSuccess, sendError } = require('../utils/response');
 exports.addToWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.params.userId;
+    const userId = req.user._id; // FIX: was req.params.userId 
+
+    if (!productId) return sendError(res, 'productId is required', 400);
 
     const user = await User.findById(userId);
     if (!user) return sendError(res, 'User not found', 404);
@@ -21,6 +23,7 @@ exports.addToWishlist = async (req, res) => {
 
     sendSuccess(res, { wishlist: user.wishlist }, 'Added to wishlist', 201);
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid productId', 400);
     sendError(res, err.message, 500);
   }
 };
@@ -29,7 +32,9 @@ exports.addToWishlist = async (req, res) => {
 exports.removeFromWishlist = async (req, res) => {
   try {
     const { productId } = req.body;
-    const userId = req.params.userId;
+    const userId = req.user._id; // FIX: was req.params.userId 
+
+    if (!productId) return sendError(res, 'productId is required', 400);
 
     const user = await User.findById(userId);
     if (!user) return sendError(res, 'User not found', 404);
@@ -41,14 +46,17 @@ exports.removeFromWishlist = async (req, res) => {
 
     sendSuccess(res, { wishlist: user.wishlist }, 'Removed from wishlist');
   } catch (err) {
+    if (err.name === 'CastError') return sendError(res, 'Invalid productId', 400);
     sendError(res, err.message, 500);
   }
 };
 
-// GET /wishlist/:userId
+// GET /wishlist
 exports.getWishlist = async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId)
+    const userId = req.user._id; // FIX: was req.params.userId 
+
+    const user = await User.findById(userId)
       .select('wishlist')
       .populate({
         path: 'wishlist.product',

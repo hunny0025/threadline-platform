@@ -35,13 +35,13 @@ function ProofCell({ stat }) {
         }}
       >
         {stat.num}
-        <span style={{ color: "#d4183d" }}>{stat.suffix}</span>
+        <span style={{ color: "#9f1239" }}>{stat.suffix}</span>
       </div>
       {stat.stars && (
         <div
           style={{
             fontSize: "11px",
-            color: "#d4183d",
+            color: "#9f1239",
             letterSpacing: "1px",
             marginTop: "1px",
           }}
@@ -68,15 +68,17 @@ function ProofCell({ stat }) {
 export default function SocialProofStrip() {
   return (
     <div
+      className="tl-proof-grid"
       style={{
         display: "grid",
-        gridTemplateColumns: "1fr 1fr",
         gap: "1px",
         background: "rgba(0,0,0,0.1)",
         borderTop: "1px solid rgba(0,0,0,0.1)",
         borderBottom: "1px solid rgba(0,0,0,0.1)",
         fontFamily: "Inter, sans-serif",
       }}
+      role="region"
+      aria-label="Store statistics"
     >
       {stats.map((s, i) => (
         <ProofCell key={i} stat={s} />

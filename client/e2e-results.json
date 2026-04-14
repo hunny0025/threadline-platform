@@ -1,0 +1,368 @@
+{
+  "config": {
+    "configFile": "C:\\projects\\Threadline\\threadline-platform\\client\\playwright.config.js",
+    "rootDir": "C:/projects/Threadline/threadline-platform/client/e2e",
+    "forbidOnly": false,
+    "fullyParallel": false,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 1
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "C:/projects/Threadline/threadline-platform/client/test-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "C:/projects/Threadline/threadline-platform/client/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+        ],
+        "timeout": 60000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "e2e-results.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.59.1",
+    "workers": 1,
+    "webServer": null
+  },
+  "suites": [
+    {
+      "title": "performance.spec.js",
+      "file": "performance.spec.js",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "Performance Testing (FCP) over 4G",
+          "file": "performance.spec.js",
+          "line": 27,
+          "column": 6,
+          "specs": [
+            {
+              "title": "Measure FCP for Home",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "flag",
+                      "description": "FCP exceeded 1.2s threshold. Was 28892.00ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 49048,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Performance] Home FCP: 28892.00ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-12T11:44:41.301Z",
+                      "annotations": [
+                        {
+                          "type": "flag",
+                          "description": "FCP exceeded 1.2s threshold. Was 28892.00ms"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-f0e926f02fcf855e3024",
+              "file": "performance.spec.js",
+              "line": 32,
+              "column": 9
+            },
+            {
+              "title": "Measure FCP for Landing",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "flag",
+                      "description": "FCP exceeded 1.2s threshold. Was 28824.00ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 31321,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Performance] Landing FCP: 28824.00ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-12T11:45:30.558Z",
+                      "annotations": [
+                        {
+                          "type": "flag",
+                          "description": "FCP exceeded 1.2s threshold. Was 28824.00ms"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-634c3cb44a1825a78a96",
+              "file": "performance.spec.js",
+              "line": 32,
+              "column": 9
+            },
+            {
+              "title": "Measure FCP for Catalog",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "flag",
+                      "description": "FCP exceeded 1.2s threshold. Was 28840.00ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 30381,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Performance] Catalog FCP: 28840.00ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-12T11:46:01.910Z",
+                      "annotations": [
+                        {
+                          "type": "flag",
+                          "description": "FCP exceeded 1.2s threshold. Was 28840.00ms"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-a08386115ed669b0396b",
+              "file": "performance.spec.js",
+              "line": 32,
+              "column": 9
+            },
+            {
+              "title": "Measure FCP for Product Detail",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [
+                    {
+                      "type": "flag",
+                      "description": "FCP exceeded 1.2s threshold. Was 28756.00ms"
+                    }
+                  ],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 30326,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "[Performance] Product Detail FCP: 28756.00ms\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-12T11:46:32.318Z",
+                      "annotations": [
+                        {
+                          "type": "flag",
+                          "description": "FCP exceeded 1.2s threshold. Was 28756.00ms"
+                        }
+                      ],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-cdf026ee64b8927b75d1",
+              "file": "performance.spec.js",
+              "line": 32,
+              "column": 9
+            },
+            {
+              "title": "Measure FCP for Checkout",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 60000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "interrupted",
+                      "duration": 22703,
+                      "error": {
+                        "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/checkout\", waiting until \"load\"\u001b[22m\n",
+                        "stack": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/checkout\", waiting until \"load\"\u001b[22m\n\n    at C:\\projects\\Threadline\\threadline-platform\\client\\e2e\\performance.spec.js:39:18",
+                        "location": {
+                          "file": "C:\\projects\\Threadline\\threadline-platform\\client\\e2e\\performance.spec.js",
+                          "column": 18,
+                          "line": 39
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 37 |\u001b[39m\n \u001b[90m 38 |\u001b[39m       \u001b[90m// We need to wait for load state so FCP has triggered\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 39 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mgoto(p\u001b[33m.\u001b[39mpath)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                  \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 40 |\u001b[39m       \u001b[36mawait\u001b[39m page\u001b[33m.\u001b[39mwaitForLoadState(\u001b[32m'networkidle'\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 41 |\u001b[39m\n \u001b[90m 42 |\u001b[39m       \u001b[90m// Get First Contentful Paint\u001b[39m\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\projects\\Threadline\\threadline-platform\\client\\e2e\\performance.spec.js",
+                            "column": 18,
+                            "line": 39
+                          },
+                          "message": "Error: page.goto: Target page, context or browser has been closed\nCall log:\n\u001b[2m  - navigating to \"http://localhost:5173/checkout\", waiting until \"load\"\u001b[22m\n\n\n  37 |\n  38 |       // We need to wait for load state so FCP has triggered\n> 39 |       await page.goto(p.path);\n     |                  ^\n  40 |       await page.waitForLoadState('networkidle');\n  41 |\n  42 |       // Get First Contentful Paint\n    at C:\\projects\\Threadline\\threadline-platform\\client\\e2e\\performance.spec.js:39:18"
+                        },
+                        {
+                          "message": "Error: browserContext.close: Target page, context or browser has been closed"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "\n=== FCP Performance Results (4G Throttled) ===\n"
+                        },
+                        {
+                          "text": "❌ FLAG Home: 28892.00ms (Target <= 1200ms)\n"
+                        },
+                        {
+                          "text": "❌ FLAG Landing: 28824.00ms (Target <= 1200ms)\n"
+                        },
+                        {
+                          "text": "❌ FLAG Catalog: 28840.00ms (Target <= 1200ms)\n"
+                        },
+                        {
+                          "text": "❌ FLAG Product Detail: 28756.00ms (Target <= 1200ms)\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-04-12T11:47:02.667Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\projects\\Threadline\\threadline-platform\\client\\test-results\\performance-Performance-Te-e2b2e-4G-Measure-FCP-for-Checkout-chromium\\error-context.md"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\projects\\Threadline\\threadline-platform\\client\\test-results\\performance-Performance-Te-e2b2e-4G-Measure-FCP-for-Checkout-chromium\\error-context.md"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\projects\\Threadline\\threadline-platform\\client\\e2e\\performance.spec.js",
+                        "column": 18,
+                        "line": 39
+                      }
+                    }
+                  ],
+                  "status": "skipped"
+                }
+              ],
+              "id": "0395ec5c307b4a8c0388-47a5ccc650eb1ae63b83",
+              "file": "performance.spec.js",
+              "line": 32,
+              "column": 9
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-04-12T11:44:39.520Z",
+    "duration": 166323.55299999999,
+    "expected": 4,
+    "skipped": 1,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

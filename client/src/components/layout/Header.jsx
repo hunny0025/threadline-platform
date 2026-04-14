@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { Search, X, User, AlertCircle } from "lucide-react";
+import { Search, X, User, AlertCircle, Menu } from "lucide-react";
 import { useScrollDirection } from "../../hooks/useScrollDirection";
 import { SearchBar } from "../ui/SearchBar";
 import { AuthModal, Button } from "../ui";
@@ -18,6 +18,33 @@ export function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authMode, setAuthMode] = useState("login");
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+  const searchModalRef = useRef(null);
+
+  // ── Focus trap for search modal ────────────────────────────
+  useEffect(() => {
+    if (!isSearchOpen) return;
+    const modal = searchModalRef.current;
+    if (!modal) return;
+    const focusableEls = modal.querySelectorAll(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const first = focusableEls[0];
+    const last = focusableEls[focusableEls.length - 1];
+    const handleTrap = (e) => {
+      if (e.key === 'Escape') { closeSearch(); return; }
+      if (e.key !== 'Tab') return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) { e.preventDefault(); last?.focus(); }
+      } else {
+        if (document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    modal.addEventListener('keydown', handleTrap);
+    // Auto-focus first element
+    setTimeout(() => first?.focus(), 100);
+    return () => modal.removeEventListener('keydown', handleTrap);
+  }, [isSearchOpen]);
 
   // ── Live Search via API ────────────────────────────────────
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
@@ -124,7 +151,7 @@ export function Header() {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex flex-shrink-0 space-x-8">
+            <nav className="hidden md:flex flex-shrink-0 space-x-8" aria-label="Main navigation">
               <Link
                 to="/shop"
                 className="font-body text-sm font-medium text-zinc-600 hover:text-violet-600 transition-colors"
@@ -147,10 +174,20 @@ export function Header() {
 
             {/* Actions */}
             <div className="flex-1 flex items-center justify-end space-x-3">
+              {/* Mobile Hamburger Button */}
+              <button
+                onClick={() => setIsMobileNavOpen(true)}
+                className="md:hidden relative p-1.5 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
+                aria-label="Open menu"
+              >
+                <Menu className="h-5 w-5" />
+              </button>
+
               {/* Search Button */}
               <button
                 onClick={openSearch}
                 className="relative p-1.5 text-zinc-600 hover:text-violet-600 transition-colors focus:outline-none"
+                aria-label="Search products"
               >
                 <span className="sr-only">Search</span>
                 <Search className="h-4 w-4" />
@@ -224,11 +261,14 @@ export function Header() {
 
             {/* Search Modal */}
             <motion.div
+              ref={searchModalRef}
               className="fixed top-16 left-0 right-0 z-60 bg-white border-b border-zinc-200 shadow-xl"
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.3, ease: [0.43, 0.13, 0.23, 0.96] }}
+              role="search"
+              aria-label="Product search"
             >
               <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 {/* Header */}
@@ -239,6 +279,7 @@ export function Header() {
                   <button
                     onClick={closeSearch}
                     className="p-2 text-zinc-400 hover:text-zinc-600 transition-colors rounded-lg hover:bg-zinc-100"
+                    aria-label="Close search"
                   >
                     <X className="h-5 w-5" />
                   </button>
@@ -283,6 +324,7 @@ export function Header() {
                         key={term}
                         onClick={() => handleSearch(term)}
                         className="px-3 py-1.5 text-sm bg-zinc-100 text-zinc-700 rounded-full hover:bg-zinc-200 transition-colors"
+                        aria-label={`Search for ${term}`}
                       >
                         {term}
                       </button>
@@ -313,6 +355,58 @@ export function Header() {
         updateQuantity={(variantId, newQty) => updateItem(variantId, newQty)}
         removeItem={(variantId) => removeItem(variantId)}
       />
+
+      {/* Mobile Navigation Drawer */}
+      <AnimatePresence>
+        {isMobileNavOpen && (
+          <>
+            <motion.div
+              className="fixed inset-0 z-[100] bg-black/40 backdrop-blur-sm md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              onClick={() => setIsMobileNavOpen(false)}
+            />
+            <motion.nav
+              className="fixed top-0 left-0 h-full w-72 bg-white z-[110] shadow-2xl flex flex-col md:hidden"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "tween", ease: [0.43, 0.13, 0.23, 0.96], duration: 0.4 }}
+              aria-label="Mobile navigation"
+            >
+              <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200">
+                <span className="font-display font-bold text-lg tracking-tight text-zinc-900">Menu</span>
+                <button
+                  onClick={() => setIsMobileNavOpen(false)}
+                  className="p-2 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full transition-colors"
+                  aria-label="Close menu"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+              <div className="flex-1 px-5 py-6 space-y-1">
+                {[{to:"/shop",label:"Shop"},{to:"/collections",label:"Collections"},{to:"/about",label:"About"},{to:"/faq",label:"FAQ"},{to:"/returns",label:"Returns"}].map((link) => (
+                  <Link
+                    key={link.to}
+                    to={link.to}
+                    onClick={() => setIsMobileNavOpen(false)}
+                    className="block py-3 px-3 text-base font-medium text-zinc-700 hover:text-violet-600 hover:bg-violet-50 rounded-lg transition-colors"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+              <div className="px-5 py-4 border-t border-zinc-200">
+                <Button variant="primary" className="w-full" onClick={() => { setIsMobileNavOpen(false); openLogin(); }}>
+                  <User className="mr-2 h-4 w-4" /> Sign In
+                </Button>
+              </div>
+            </motion.nav>
+          </>
+        )}
+      </AnimatePresence>
     </>
   );
 }

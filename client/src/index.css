@@ -237,6 +237,9 @@
     -moz-osx-font-smoothing: grayscale;
     margin: 0;
     padding: 0;
+    /* Firefox scrollbar normalization */
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-zinc-700) var(--color-bg);
   }
 
   h1, h2, h3, h4, h5, h6 {

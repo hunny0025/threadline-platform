@@ -154,11 +154,12 @@ function CollectionCard({ col, hovered, onEnter, onLeave }) {
         cursor: "pointer",
         background: "#030213",
         gridColumn: col.hero ? "1 / -1" : undefined,
-        aspectRatio: col.hero ? "16/7" : "4/5",
+        aspectRatio: col.hero ? "16/9" : "4/5",
         transform: hovered ? "translateY(-2px)" : "none",
         transition: `transform 0.25s ${EASE}`,
       }}
       className="tl-featured-card"
+      aria-label={`${col.name} collection`}
     >
       <img
         src={col.image}
@@ -293,14 +294,13 @@ function CollectionCard({ col, hovered, onEnter, onLeave }) {
                 fontFamily: "Inter, sans-serif",
                 cursor: "pointer",
               }}
-            >
-              Shop Now
+              aria-label={`Shop ${col.name}`}
+            >              Shop Now
             </button>
           )}
         </div>
       </div>
 
-      <style>{`@keyframes bpulse{0%,100%{transform:scale(1)}50%{transform:scale(1.8)}}`}</style>
     </div>
   );
 }

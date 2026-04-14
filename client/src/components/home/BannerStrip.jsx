@@ -16,8 +16,11 @@ export default function BannerStrip() {
         padding: "10px 0",
         overflow: "hidden",
       }}
+      role="marquee"
+      aria-label="Promotional announcements"
     >
       <div
+        className="tl-marquee-track"
         style={{
           display: "flex",
           gap: "40px",
@@ -55,10 +58,6 @@ export default function BannerStrip() {
           </span>
         ))}
       </div>
-      <style>{`
-        @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
-        @keyframes bpulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.8); } }
-      `}</style>
     </div>
   );
 }
