@@ -1,7 +1,8 @@
-import { motion, MotionProps } from "motion/react";
+import { motion } from "framer-motion";
 import { forwardRef, ButtonHTMLAttributes } from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/src/lib/utils";
+import { easings, durations } from "@/src/lib/easings";
 
 const buttonVariants = cva(
   // Base styles - following 8pt grid
@@ -73,7 +74,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         whileHover={
           !disabled
             ? {
-              scale: 1.02,
+              scale: 1.03,
               y: -2,
             }
             : {}
@@ -81,13 +82,19 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         whileTap={
           !disabled
             ? {
-              scale: 0.98,
+              scale: 0.95,
+              y: 1,
             }
             : {}
         }
         transition={{
-          duration: 0.2,
-          ease: [0.43, 0.13, 0.23, 0.96], // Cubic bezier
+          y: { duration: durations.fast, ease: easings.buttonHover },
+          scale: {
+            type: "spring",
+            stiffness: 420,
+            damping: 20,
+            mass: 0.5,
+          },
         }}
         {...motionSafeProps}
       >

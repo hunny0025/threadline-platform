@@ -26,10 +26,12 @@ import {
   Modal,
   RouteLoadingBar,
   PageTransition,
+  Skeleton,
   ErrorBoundary,
 } from "@/src/components/ui";
 import { SWRProvider } from "./components/SWRProvider";
 import { CartProvider } from "./components/CartContext";
+import { easings, durations } from "@/src/lib/easings";
 import "./App.css";
 
 import { useEffect } from "react";
@@ -37,10 +39,16 @@ import { useEffect } from "react";
 // Skeleton loader for lazy-loaded pages
 function PageFallback() {
   return (
-    <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-3 border-zinc-200 border-t-violet-600 rounded-full animate-spin" />
-        <p className="text-sm text-zinc-400 tracking-wide">Loading…</p>
+    <div className="flex items-center justify-center min-h-[60vh] px-4">
+      <div className="w-full max-w-lg space-y-4 rounded-2xl border border-zinc-200/70 bg-white p-6">
+        <Skeleton className="h-8 w-3/5" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-11/12" />
+        <Skeleton className="h-4 w-9/12" />
+        <div className="flex gap-3 pt-2">
+          <Skeleton className="h-10 w-28 rounded-full" />
+          <Skeleton className="h-10 w-24 rounded-full" />
+        </div>
       </div>
     </div>
   );
@@ -55,7 +63,14 @@ function AnimatedRoutes() {
   }, [location.pathname]);
 
   return (
-    <PageTransition preset="slideUp" duration={0.4}>
+    <PageTransition
+      preset="slideUp"
+      duration={durations.page}
+      enterEase={easings.pageEnter}
+      exitEase={easings.pageExit}
+      slideDistance={16}
+      mode="wait"
+    >
       <Suspense fallback={<PageFallback />}>
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Home />} />

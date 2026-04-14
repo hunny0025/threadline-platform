@@ -150,6 +150,10 @@ export function PageTransition({
         transition={{
           duration,
           ease: enterEase,
+          exit: {
+            duration: Math.max(duration * 0.85, durations.fast),
+            ease: exitEase,
+          },
         }}
         onAnimationComplete={onAnimationComplete}
       >
