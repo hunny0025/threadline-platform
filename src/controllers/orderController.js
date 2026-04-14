@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const Order = require('../models/Order');
 const Cart = require('../models/Cart');
-const PaymentTransaction = require('../models/PaymentTransaction');
+const PaymentTransaction = require('../models/PaymentTransaction'); // eslint-disable-line no-unused-vars
 const { decrementOnOrder } = require('../services/stockService');
 const { sendSuccess, sendError } = require('../utils/response');
 const { paginate } = require('../utils/pagination');
