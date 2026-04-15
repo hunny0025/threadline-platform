@@ -1,64 +1,85 @@
 const mongoose = require('mongoose');
 
-const reviewSchema = new mongoose.Schema({
-
-  userId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
+const reviewSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      required: true,
+    },
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true,
+      index: true,
+    },
+    rating: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 5,
+    },
+    comment: {
+      type: String,
+      trim: true,
+      maxlength: 1000,
+    },
+    // Array of Cloudinary image URLs attached to the review
+    images: [
+      {
+        type: String,
+        trim: true,
+      },
+    ],
+    // True if this user actually purchased the product (set during order creation)
+    verifiedPurchase: {
+      type: Boolean,
+      default: false,
+    },
   },
-
-  productId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Product',
-    required: true,
-    index: true
-  },
-
-  rating: {
-    type: Number,
-    required: true,
-    min: 1,
-    max: 5
-  },
-
-  comment: {
-    type: String,
-    trim: true
-  }
-
-},
-{
-  timestamps: true
-}
+  { timestamps: true }
 );
 
-// ─── IMPROVEMENT 2: Unique Compound Index on Review ──────────────────────────
-//
-// WHAT WAS WRONG:
-// There was no rule stopping one user from submitting multiple reviews on the
-// same product. A user could leave 100 reviews on one t-shirt, flooding the
-// ratings and destroying the average shown to other shoppers.
-// Even a frontend bug (submit button firing twice) would silently create
-// duplicate reviews with no error.
-//
-// WHY THIS FIX:
-// A unique compound index on userId + productId tells MongoDB:
-// "One user can only have ONE review per product. Reject any duplicate."
-// This is enforced at the database level — even if the controller code has
-// a bug, MongoDB will block the duplicate automatically.
-//
-// WHY DATABASE LEVEL IS SAFER THAN CONTROLLER LEVEL:
-// If we only check in the controller, two simultaneous requests from the
-// same user can both pass the check before either is saved — a race condition.
-// A database unique index is atomic — only one insert wins, period.
-//
-// REAL IMPACT:
-// Protects rating integrity for every product on the platform.
-// One user = one honest review per product. Always.
-//
+// One review per user per product — enforced at DB level (atomic, race-condition safe)
 reviewSchema.index({ userId: 1, productId: 1 }, { unique: true });
 
+// Static method: get average rating + count for a product
+// Usage: await Review.getAverageRating(productId)
+reviewSchema.statics.getAverageRating = async function (productId) {
+  const result = await this.aggregate([
+    { $match: { productId: new mongoose.Types.ObjectId(productId) } },
+    {
+      $group: {
+        _id: '$productId',
+        avgRating: { $avg: '$rating' },
+        totalReviews: { $sum: 1 },
+        ratingBreakdown: {
+          $push: '$rating',
+        },
+      },
+    },
+    {
+      $addFields: {
+        avgRating: { $round: ['$avgRating', 1] },
+      },
+    },
+  ]);
+
+  if (result.length === 0) {
+    return { avgRating: 0, totalReviews: 0 };
+  }
+
+  // Build 1–5 star breakdown counts
+  const breakdown = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+  result[0].ratingBreakdown.forEach((r) => {
+    breakdown[r] = (breakdown[r] || 0) + 1;
+  });
+
+  return {
+    avgRating: result[0].avgRating,
+    totalReviews: result[0].totalReviews,
+    breakdown,
+  };
+};
+
 module.exports = mongoose.model('Review', reviewSchema);
-
-
