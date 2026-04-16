@@ -20,5 +20,5 @@ COPY . .
 
 EXPOSE 3000
 
-# Nodemon for hot reload in dev
-CMD ["npx", "nodemon", "server.js"]
+# Use node (not nodemon) for production stability
+CMD ["node", "server.js"]
