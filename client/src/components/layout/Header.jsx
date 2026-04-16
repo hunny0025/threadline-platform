@@ -77,13 +77,18 @@ export function Header() {
       body: JSON.stringify(data),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Invalid email or password");
+    const json = await response.json();
+
+    if (!response.ok || json.success === false) {
+      throw new Error(json.message || "Invalid email or password");
     }
 
-    const user = await response.json();
-    console.log("Logged in:", user);
+    // Save token so subsequent API calls are authenticated
+    if (json.data?.accessToken) {
+      localStorage.setItem("accessToken", json.data.accessToken);
+    }
+    // Close modal on success
+    setIsAuthOpen(false);
   };
 
   const handleSignup = async (data) => {
@@ -97,13 +102,14 @@ export function Header() {
       }),
     });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Could not create account");
+    const json = await response.json();
+
+    if (!response.ok || json.success === false) {
+      throw new Error(json.message || "Could not create account");
     }
 
-    const user = await response.json();
-    console.log("Signed up:", user);
+    // Auto-login after register by switching to login mode
+    setAuthMode("login");
   };
 
   const handleGoogleAuth = async () => {
