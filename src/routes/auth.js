@@ -28,7 +28,7 @@ router.post('/logout', logout);
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
 const crypto = require('crypto');
-const redis = require('../db/redis');
+const { redis: redisClient } = require('../db/redis');
 
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login', session: false }),
@@ -39,7 +39,7 @@ router.get('/google/callback',
       { expiresIn: '15m' }
     );
     const code = crypto.randomUUID();
-    await redis.setEx(`oauth_code:${code}`, 60, accessToken);
+    await redisClient.setex(`oauth_code:${code}`, 60, accessToken);
     const origin = process.env.ALLOWED_ORIGINS.split(',')[0];
     res.redirect(`${origin}/auth/callback?code=${code}`);
   }
