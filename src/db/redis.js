@@ -18,6 +18,7 @@ const connectRedis = () => {
       retryDelayOnFailover: 100,
       lazyConnect: true,
       connectTimeout: 10000,
+      tls: redisUrl.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
     });
 
     redis.on('connect', () => {
