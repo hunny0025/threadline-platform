@@ -15,6 +15,14 @@ if (!origins.includes(vercelOrigin)) {
 module.exports = cors({
   origin: origins,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Origin', 'Accept', 'X-Requested-With'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'Origin',
+    'Accept',
+    'X-Requested-With',
+    'x-session-id',
+  ],
+  exposedHeaders: ['x-session-id'],
   credentials: true,
-});
+});
