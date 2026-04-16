@@ -4,10 +4,12 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useAuth } from "../components/AuthContext";
 
 export function AuthCallback() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const { checkAuth } = useAuth();
   const [status, setStatus] = useState("Processing login…");
 
   useEffect(() => {
@@ -22,12 +24,14 @@ export function AuthCallback() {
     }
 
     if (accessToken) {
-      // Store tokens in localStorage so the app can use them
+      // Store tokens in localStorage
       localStorage.setItem("accessToken", accessToken);
       if (refreshToken) localStorage.setItem("refreshToken", refreshToken);
 
+      // Verify the token and fetch user profile
+      checkAuth();
+
       setStatus("Login successful! Redirecting…");
-      // Small delay so user sees the success message
       setTimeout(() => navigate("/"), 1000);
     } else {
       setStatus("No token received. Redirecting…");

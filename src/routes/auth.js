@@ -3,9 +3,10 @@ const router = express.Router();
 const { body } = require('express-validator');
 const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
-const { register, login, refresh, logout } = require('../controllers/authController');
+const { register, login, refresh, logout, getMe } = require('../controllers/authController');
 const { authLimiter } = require('../middleware/authRateLimiter');
 const { validate } = require('../middleware/validation');
+const { protect } = require('../middleware/authMiddleware');
 
 // Validation rules
 const registerValidation = [
@@ -23,6 +24,7 @@ router.post('/register', authLimiter, registerValidation, validate, register);
 router.post('/login', authLimiter, loginValidation, validate, login);
 router.post('/refresh', refresh);
 router.post('/logout', logout);
+router.get('/me', protect, getMe);
 
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));

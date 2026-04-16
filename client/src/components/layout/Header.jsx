@@ -8,6 +8,7 @@ import { SearchBar } from "../ui/SearchBar";
 import { AuthModal, Button } from "../ui";
 import { CartDrawer } from "./CartDrawer";
 import { useCartContext } from "../CartContext";
+import { useAuth } from "../AuthContext";
 import { useSearch } from "../../hooks/useSearch";
 import { useDebounce } from "../../hooks/useDebounce";
 
@@ -58,6 +59,7 @@ export function Header() {
 
   // ── Live Cart State from API ──────────────────────────────
   const { cartItems, itemCount, updateItem, removeItem } = useCartContext();
+  const { user, login: setAuthUser, logout } = useAuth();
 
   // Auth handlers
   const openLogin = () => {
@@ -85,7 +87,7 @@ export function Header() {
 
     // Save token so subsequent API calls are authenticated
     if (json.data?.accessToken) {
-      localStorage.setItem("accessToken", json.data.accessToken);
+      setAuthUser(json.data.user, json.data.accessToken);
     }
     // Close modal on success
     setIsAuthOpen(false);
@@ -227,26 +229,56 @@ export function Header() {
                 )}
               </button>
 
-              {/* Sign In Button */}
-              <Button
-                size="sm"
-                onClick={openLogin}
-                className="hidden sm:inline-flex"
-              >
-                <User className="mr-1 h-3.5 w-3.5" />
-                Sign In
-              </Button>
+                )}
+              </button>
 
-              {/* Mobile Sign In Icon */}
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={openLogin}
-                className="sm:hidden p-1.5"
-              >
-                <span className="sr-only">Sign In</span>
-                <User className="h-4 w-4" />
-              </Button>
+              {/* User Profile / Sign In */}
+              {user ? (
+                <div className="flex items-center gap-3 ml-2 lg:ml-4">
+                  <div className="hidden md:flex flex-col items-end">
+                    <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest leading-none mb-1">Account</span>
+                    <span className="text-sm font-medium text-zinc-900 line-clamp-1">{user.name}</span>
+                    <button 
+                      onClick={logout}
+                      className="text-[10px] text-zinc-500 hover:text-violet-600 transition-colors uppercase tracking-widest font-bold mt-1"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                  <div className="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-100 border border-zinc-200 flex items-center justify-center overflow-hidden transition-all hover:border-violet-300">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="bg-violet-50 w-full h-full flex items-center justify-center">
+                        <span className="text-xs font-bold text-violet-600">{user.name.charAt(0).toUpperCase()}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* Sign In Button */}
+                  <Button
+                    size="sm"
+                    onClick={openLogin}
+                    className="hidden sm:inline-flex ml-2"
+                  >
+                    <User className="mr-1 h-3.5 w-3.5" />
+                    Sign In
+                  </Button>
+
+                  {/* Mobile Sign In Icon */}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={openLogin}
+                    className="sm:hidden p-1.5 ml-1"
+                  >
+                    <User className="h-5 w-5 text-zinc-700" />
+                  </Button>
+                </>
+              )}
+
             </div>
           </div>
         </div>

@@ -31,6 +31,7 @@ import {
 } from "@/src/components/ui";
 import { SWRProvider } from "./components/SWRProvider";
 import { CartProvider } from "./components/CartContext";
+import { AuthProvider } from "./components/AuthContext";
 import "./App.css";
 
 import { useEffect } from "react";
@@ -81,8 +82,9 @@ function App() {
 
   return (
     <SWRProvider>
-      <CartProvider>
-        <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <BrowserRouter>
         <ErrorBoundary>
           <div className="app min-h-screen bg-white font-body text-zinc-900 pt-16 flex flex-col">
             {/* Skip Navigation Link */}
@@ -126,6 +128,7 @@ function App() {
         </ErrorBoundary>
       </BrowserRouter>
       </CartProvider>
+      </AuthProvider>
     </SWRProvider>
   );
 }

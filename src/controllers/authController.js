@@ -95,4 +95,14 @@ const logout = async (req, res) => {
   sendSuccess(res, null, 'Logged out successfully');
 };
 
-module.exports = { register, login, refresh, logout };
+const getMe = async (req, res) => {
+  sendSuccess(res, {
+    id: req.user._id,
+    name: req.user.name,
+    email: req.user.email,
+    role: req.user.role,
+    avatar: req.user.avatar,
+  });
+};
+
+module.exports = { register, login, refresh, logout, getMe };

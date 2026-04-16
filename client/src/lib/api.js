@@ -21,7 +21,18 @@ export const API_BASE = import.meta.env.VITE_API_URL || '';
  * @throws {Error}  Includes status + message from the API
  */
 export async function fetcher(url) {
-  const res = await fetch(`${API_BASE}${url}`);
+  const token = localStorage.getItem('accessToken');
+  const headers = {
+    'Content-Type': 'application/json',
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const res = await fetch(`${API_BASE}${url}`, {
+    headers
+  });
 
   // Network-level failure
   if (!res.ok) {
