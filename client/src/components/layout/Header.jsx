@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { API_BASE } from "../../lib/api";
 import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, X, User, AlertCircle, Menu } from "lucide-react";
@@ -70,7 +71,7 @@ export function Header() {
   };
 
   const handleLogin = async (data) => {
-    const response = await fetch("/api/auth/login", {
+    const response = await fetch(`${API_BASE}/api/v1/auth/login`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -86,7 +87,7 @@ export function Header() {
   };
 
   const handleSignup = async (data) => {
-    const response = await fetch("/api/auth/register", {
+    const response = await fetch(`${API_BASE}/api/v1/auth/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -106,7 +107,7 @@ export function Header() {
   };
 
   const handleGoogleAuth = async () => {
-    window.location.href = "/api/auth/google";
+    window.location.href = `${API_BASE}/api/v1/auth/google`;
   };
 
   const handleSearch = useCallback((query) => {
