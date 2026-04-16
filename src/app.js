@@ -79,14 +79,31 @@ app.use(corsMiddleware);
 app.use(compression());
 
 // Input sanitization - prevent NoSQL injection & XSS
-const mongoSanitize = require('express-mongo-sanitize');
-const xssClean = require('xss-clean');
-
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
+
+// Manual sanitization — express-mongo-sanitize and xss-clean both mutate
+// req.query which is read-only in Express 5, causing a fatal 500 on every request.
+// We sanitize req.body only (which IS writable) to prevent NoSQL injection.
 if (process.env.NODE_ENV !== 'test') {
-  app.use(mongoSanitize({ replaceWith: '_' }));
-  app.use(xssClean());
+  app.use((req, _res, next) => {
+    if (req.body && typeof req.body === 'object') {
+      const sanitize = (obj) => {
+        for (const key of Object.keys(obj)) {
+          if (key.startsWith('$') || key.includes('.')) {
+            delete obj[key];
+          } else if (obj[key] && typeof obj[key] === 'object') {
+            sanitize(obj[key]);
+          } else if (typeof obj[key] === 'string') {
+            // Basic XSS: strip script tags
+            obj[key] = obj[key].replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+          }
+        }
+      };
+      sanitize(req.body);
+    }
+    next();
+  });
 }
 app.use(cookieParser());
 
