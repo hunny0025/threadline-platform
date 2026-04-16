@@ -27,22 +27,33 @@ router.post('/logout', logout);
 // Google OAuth routes
 router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 
-const crypto = require('crypto');
-const { redis: redisClient } = require('../db/redis');
-
 router.get('/google/callback',
   passport.authenticate('google', { failureRedirect: '/login', session: false }),
-  async (req, res) => {
-    const accessToken = jwt.sign(
-      { id: req.user._id, role: req.user.role },
-      process.env.JWT_SECRET,
-      { expiresIn: '15m' }
-    );
-    const code = crypto.randomUUID();
-    await redisClient.setex(`oauth_code:${code}`, 60, accessToken);
-    const origin = process.env.ALLOWED_ORIGINS.split(',')[0];
-    res.redirect(`${origin}/auth/callback?code=${code}`);
+  (req, res) => {
+    try {
+      const accessToken = jwt.sign(
+        { id: req.user._id, role: req.user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: '15m' }
+      );
+      const refreshToken = jwt.sign(
+        { id: req.user._id },
+        process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      // Redirect directly to frontend with tokens — no Redis needed
+      const origin = (process.env.ALLOWED_ORIGINS || '').split(',')[0].trim().replace(/\/$/, '')
+        || 'https://threadline-platform.vercel.app';
+
+      return res.redirect(
+        `${origin}/auth/callback?accessToken=${accessToken}&refreshToken=${refreshToken}`
+      );
+    } catch (err) {
+      console.error('Google OAuth callback error:', err.message);
+      return res.redirect('/login?error=oauth_failed');
+    }
   }
 );
 
-module.exports = router;
+module.exports = router;

@@ -13,6 +13,7 @@ import { Home } from "./pages/Home";
 import { About } from "./pages/About";
 import { FAQ } from "./pages/FAQ";
 import { Returns } from "./pages/Returns";
+import { AuthCallback } from "./pages/AuthCallback";
 
 // Lazy-loaded heavy pages — code-split into separate chunks
 const Catalog = lazy(() => import("./pages/Catalog").then(m => ({ default: m.Catalog })));
@@ -68,6 +69,7 @@ function AnimatedRoutes() {
           <Route path="/returns" element={<Returns />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation" element={<OrderConfirmation />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
         </Routes>
       </Suspense>
     </PageTransition>
