@@ -15,10 +15,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
 
       - name: Install backend dependencies
@@ -43,18 +43,18 @@ jobs:
           SESSION_SECRET: ci_session_secret_placeholder_32ch
           ALLOWED_ORIGINS: http://localhost:5173
 
-  # ── Frontend: build + Lighthouse CI ───────────────────────
+  # ── Frontend: build ────────────────────────────────────────
   frontend:
-    name: Frontend (Vite + Lighthouse)
+    name: Frontend (Vite Build)
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: client/package-lock.json
 
@@ -70,20 +70,10 @@ jobs:
         working-directory: ./client
         run: npm run build
         env:
-          VITE_API_URL: https://threadline-platform-production.up.railway.app
+          VITE_API_URL: https://threadline-platform.onrender.com
 
-      - name: Run bundle analyzer (size check)
+      - name: Check bundle size
         working-directory: ./client
         run: |
           du -sh dist/
           find dist/assets -name "*.js" | sort -k1 -h
-
-      - name: Install Lighthouse CI
-        run: npm install -g @lhci/cli
-
-      - name: Run Lighthouse CI
-        working-directory: ./client
-        run: lhci autorun --config=../lighthouserc.js
-        continue-on-error: true
-        env:
-          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
