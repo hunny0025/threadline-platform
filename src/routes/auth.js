@@ -36,7 +36,7 @@ router.get('/google/callback',
       const accessToken = jwt.sign(
         { id: req.user._id, role: req.user.role },
         process.env.JWT_SECRET,
-        { expiresIn: '15m' }
+        { expiresIn: '7d' }
       );
       const refreshToken = jwt.sign(
         { id: req.user._id },
