@@ -15,6 +15,7 @@ function report(name, stats) {
   const inputStage = stage?.inputStage;
   const scanType = inputStage?.stage || stage?.stage || 'UNKNOWN';
   const docsExamined = stats?.executionStats?.totalDocsExamined ?? '?';
+  // eslint-disable-next-line no-unused-vars
   const docsReturned = stats?.executionStats?.totalKeysExamined ?? '?';
   const ms = stats?.executionStats?.executionTimeMillis ?? '?';
 

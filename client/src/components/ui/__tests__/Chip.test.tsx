@@ -9,7 +9,7 @@ describe('Chip Component', () => {
   });
 
   it('renders remove button when removable is true', () => {
-    render(<Chip removable>Apple</Chip>);
+    render(<Chip removable onRemove={() => {}}>Apple</Chip>);
     expect(screen.getByRole('button', { name: /remove chip/i })).toBeInTheDocument();
   });
 

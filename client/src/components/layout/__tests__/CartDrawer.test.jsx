@@ -58,6 +58,8 @@ describe('CartDrawer', () => {
     fireEvent.click(incBtn);
     expect(updateSpy).toHaveBeenCalledWith('v_1', 3);
     
+    updateSpy.mockClear();
+    
     const decBtn = screen.getByRole('button', { name: /decrease quantity/i });
     fireEvent.click(decBtn);
     expect(updateSpy).toHaveBeenCalledWith('v_1', 1);
