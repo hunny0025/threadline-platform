@@ -1,188 +1,150 @@
 # 🧵 Threadline Platform
-**Professional Fashion E-Commerce Staging & Dev Environment**
+**Full-Stack Fashion E-Commerce Platform — Production Deployment**
 
-Threadline is a full-stack fashion e-commerce platform. This repository contains a production-grade backend API, a modern React frontend, and a fully automated DevOps pipeline.
+Threadline is a production-grade fashion e-commerce platform built with a Node.js/Express backend API and a modern React + Vite frontend, featuring Google OAuth, JWT authentication, Redis caching, and a fully automated CI/CD pipeline.
 
 ---
 
-## 🚀 Live Staging Environment
-Use these links to check the latest stable deployment:
+## 🚀 Live Deployment
 
-| Service | Environment | URL |
+| Service | Platform | URL |
 | :--- | :--- | :--- |
 | **Frontend** | Vercel | [threadline-platform.vercel.app](https://threadline-platform.vercel.app) |
-| **Backend** | Railway | [threadline-platform-production.up.railway.app](https://threadline-platform-production.up.railway.app/health) |
-| **API Docs** | Swagger | [/api/docs](https://threadline-platform-production.up.railway.app/api/docs) |
+| **Backend API** | Render | [threadline-platform.onrender.com](https://threadline-platform.onrender.com/health) |
+| **API Docs** | Swagger | [/api/docs](https://threadline-platform.onrender.com/api/docs) |
+| **Repository** | GitHub | [github.com/hunny0025/threadline-platform](https://github.com/hunny0025/threadline-platform) |
 
 ---
 
 ## ⚡ Quick Start (Local Development)
 
-### Option A: The "Senior Dev" Way (Docker) - RECOMMENDED
-If you have Docker installed, you can start the **entire stack** (Backend + Frontend + MongoDB + Redis) with one command. No local database installation needed.
+### Option A: Docker (Recommended)
+Start the **entire stack** (Backend + Frontend + MongoDB + Redis) with one command.
 
 ```bash
 # 1. Clone and enter
 git clone https://github.com/hunny0025/threadline-platform.git
 cd threadline-platform
 
-# 2. Setup Env
+# 2. Setup environment
 cp .env.example .env
 cp client/.env.example client/.env
+# Fill in your values in .env
 
 # 3. Start everything
 docker-compose up
 ```
-*Frontend runs on `http://localhost:5173` | Backend on `http://localhost:3000`*
+*Frontend: `http://localhost:5173` | Backend: `http://localhost:3000`*
 
 ---
 
-### Option B: The Manual Way
-Requires Node.js 18+ and a local MongoDB instance.
+### Option B: Manual Setup
+Requires Node.js 18+ and local MongoDB + Redis instances.
 
-**1. Backend Setup**
+**Backend:**
 ```bash
 npm install
-npm run dev
+cp .env.example .env   # Fill in required values
+npm run seed           # Seed 100 products + categories
+npm run dev            # Starts on http://localhost:3000
 ```
 
-**2. Frontend Setup**
+**Frontend:**
 ```bash
 cd client
 npm install
-npm run dev
+cp .env.example .env   # Set VITE_API_URL=http://localhost:3000
+npm run dev            # Starts on http://localhost:5173
 ```
 
 ---
 
-## 🌱 Seeding Data
-To populate your database with 30+ realistic fashion products, categories, and variants:
+## 🌱 Seeding the Database
+
+To populate the database with **100 realistic fashion products**, 10 categories, and full variants:
 ```bash
 npm run seed
 ```
-*⚠️ WARNING: This will clear your existing local database collections before seeding.*
-
----
-
-## 🛠️ Team Onboarding: Env Variables
-Every intern/team member **must** set these in their local `.env` file from the `.env.example` template.
-
-### 🔑 Critical Identity Variables
-| Variable | Description |
-| :--- | :--- |
-| `JWT_SECRET` | Secret for short-lived access tokens |
-| `JWT_REFRESH_SECRET` | **MANDATORY** for login & refresh sessions |
-| `SESSION_SECRET` | Used for Passport.js / Google OAuth sessions |
+> ⚠️ This will clear existing `Products`, `Variants`, and `Categories` collections before seeding.
 
 ---
 
 ## 🔐 Environment Variables — Full Reference
 
-Copy `.env.example` → `.env` and fill in all values. Full reference:
+Copy `.env.example` → `.env` and fill in all values:
 
 | Variable | Required | Description |
 | :--- | :--- | :--- |
 | `PORT` | ✅ | Server port (default: 3000) |
-| `NODE_ENV` | ✅ | `development` / `staging` / `production` |
-| `MONGODB_URI` | ✅ | MongoDB connection string |
-| `REDIS_URL` | ✅ | Redis connection URL |
+| `NODE_ENV` | ✅ | `development` / `production` |
+| `MONGODB_URI` | ✅ | MongoDB Atlas connection string |
+| `REDIS_URL` | ✅ | Redis connection URL (use `rediss://` for TLS) |
 | `JWT_SECRET` | ✅ | Access token secret (min 32 chars) |
 | `JWT_REFRESH_SECRET` | ✅ | Refresh token secret — must differ from JWT_SECRET |
 | `SESSION_SECRET` | ✅ | Passport session secret (min 32 chars) |
-| `GOOGLE_CLIENT_ID` | ⚠️ OAuth only | Google Cloud Console credentials |
-| `GOOGLE_CLIENT_SECRET` | ⚠️ OAuth only | Google Cloud Console credentials |
-| `GOOGLE_CALLBACK_URL` | ⚠️ OAuth only | Auth callback URL |
-| `ALLOWED_ORIGINS` | ✅ | Comma-separated CORS origins |
-| `RAZORPAY_KEY_ID` | ⚠️ Payments only | Razorpay dashboard test/live key |
-| `RAZORPAY_KEY_SECRET` | ⚠️ Payments only | Razorpay dashboard test/live secret |
-| `EMAIL_HOST` | ⚠️ Email only | SMTP host (use `smtp.ethereal.email` for dev) |
-| `EMAIL_PORT` | ⚠️ Email only | SMTP port (587) |
-| `EMAIL_USER` | ⚠️ Email only | SMTP username |
-| `EMAIL_PASS` | ⚠️ Email only | SMTP password |
-| `ADMIN_EMAIL` | ⚠️ Email only | Receives admin notifications |
-| `AWS_ACCESS_KEY_ID` | ❌ Optional | AWS IAM key for S3 backups |
-| `AWS_SECRET_ACCESS_KEY` | ❌ Optional | AWS IAM secret |
-| `AWS_REGION` | ❌ Optional | e.g. `ap-south-1` |
-| `S3_BUCKET_NAME` | ❌ Optional | e.g. `threadline-backups` |
-| `NEW_RELIC_LICENSE_KEY` | ❌ Optional | APM monitoring (leave blank to disable) |
+| `GOOGLE_CLIENT_ID` | ⚠️ OAuth | From Google Cloud Console |
+| `GOOGLE_CLIENT_SECRET` | ⚠️ OAuth | From Google Cloud Console |
+| `GOOGLE_CALLBACK_URL` | ⚠️ OAuth | `https://your-backend.com/api/v1/auth/google/callback` |
+| `ALLOWED_ORIGINS` | ✅ | Comma-separated CORS origins (e.g. your Vercel URL) |
+| `RAZORPAY_KEY_ID` | ⚠️ Payments | Razorpay dashboard test/live key |
+| `RAZORPAY_KEY_SECRET` | ⚠️ Payments | Razorpay dashboard test/live secret |
+| `EMAIL_HOST` | ⚠️ Email | SMTP host |
+| `EMAIL_PORT` | ⚠️ Email | SMTP port (587) |
+| `EMAIL_USER` | ⚠️ Email | SMTP username |
+| `EMAIL_PASS` | ⚠️ Email | SMTP password |
 
-> **Dev tip:** For email testing, create a free inbox at [ethereal.email](https://ethereal.email) — no real emails are sent.
+> **Dev Tip:** Use [ethereal.email](https://ethereal.email) for free SMTP testing — no real emails are sent.
 
 ---
 
-## 🧑‍💻 Local Development — API Setup
+## 🏗️ Project Architecture
 
-### Prerequisites
-- Node.js 18+
-- MongoDB running locally or via Docker
-- Redis running locally or via Docker
-
-### Steps
-
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Setup env
-cp .env.example .env
-# Edit .env — at minimum set MONGODB_URI, REDIS_URL, JWT_SECRET, JWT_REFRESH_SECRET, SESSION_SECRET
-
-# 3. Seed the database (optional)
-npm run seed
-
-# 4. Start dev server
-npm run dev
-# API runs at http://localhost:3000
-# Swagger docs at http://localhost:3000/api/docs
-# Health check at http://localhost:3000/health
-```
-
-### Verify it's working
-```bash
-curl http://localhost:3000/health
-# Expected: { "status": "OK", ... }
-```
-
-### 🌐 Social Auth (Google)
-| Variable | Usage |
-| :--- | :--- |
-| `GOOGLE_CLIENT_ID` | From Google Cloud Console |
-| `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
-| `GOOGLE_CALLBACK_URL` | `http://localhost:3000/api/v1/auth/google/callback` |
-
----
-
-## 🛡️ Reliability & DevOps
-
-### ☁️ CI/CD Pipeline (GitHub Actions)
-Every Push/PR triggers an automated check:
-1. **Linting**: Checks code quality via ESLint.
-2. **Testing**: Runs unit tests via Jest.
-3. **Build**: Ensures the project builds without errors.
-*Status: Check the **Actions** tab for the green ✅.*
-
-### 📦 Database Backups (S3)
-We use a production-grade backup strategy located in `scripts/backup.sh`.
-- **How it works**: Dumps MongoDB → Compresses → Uploads to AWS S3.
-- **Schedule**: Intended for daily cron jobs in production.
-
----
-
-## 📂 Project Structure
 ```text
 threadline-platform/
-├── client/                # React + Vite (Vercel)
-├── src/                   # Node.js API (Railway)
-│   ├── config/            # Passport & Env config
-│   ├── controllers/       # Business logic
-│   ├── models/            # Mongoose Schemas (User, Product, etc.)
-│   ├── routes/            # API Endpoints
-│   └── scripts/           # Seed & Backup utilities
-├── docker-compose.yml     # Local dev orchestration
-└── .github/workflows/     # CI Pipeline
+├── client/                    # React + Vite (deployed on Vercel)
+│   ├── src/
+│   │   ├── components/        # AuthContext, CartContext, UI library
+│   │   ├── pages/             # Catalog, ProductDetail, Checkout, AuthCallback
+│   │   ├── hooks/             # useSearch, useCartContext, useScrollDirection
+│   │   └── lib/               # API client (auto-injects Bearer tokens)
+├── src/                       # Node.js/Express API (deployed on Render)
+│   ├── config/                # Passport.js & environment config
+│   ├── controllers/           # authController, productController, etc.
+│   ├── middleware/            # CORS, auth, rate-limiting, sanitization
+│   ├── models/                # Mongoose Schemas (User, Product, Order, etc.)
+│   ├── routes/                # /auth, /products, /cart, /orders
+│   ├── db/                    # MongoDB & Redis connection managers
+│   └── scripts/               # seed.js, backup.sh
+├── Dockerfile                 # Production Docker build
+├── docker-compose.yml         # Local full-stack orchestration
+└── .github/workflows/         # CI/CD pipeline (lint + test + build)
 ```
+
+---
+
+## 🔑 Key Features
+
+- **Authentication**: Email/Password + Google OAuth 2.0 (Passport.js + JWT)
+- **Global Auth State**: React AuthContext with persistent login via localStorage
+- **Product Catalogue**: 100 products, 10 categories, search, filters, variants
+- **Shopping Cart**: Session-aware cart with `x-session-id` for guest users
+- **Checkout & Orders**: Full order lifecycle with Razorpay payment integration
+- **Admin Ready**: Role-based access (user / admin) for protected routes
+- **Caching**: Redis-powered product & search cache (graceful fallback if Redis unavailable)
+- **Security**: Helmet, CORS hardening, rate limiting, custom body sanitizer (Express 5 compatible)
+- **DevOps**: Docker, GitHub Actions CI/CD, health check endpoint, Swagger API docs
+
+---
+
+## 🛡️ CI/CD Pipeline
+
+Every push to `main` triggers:
+1. **Lint** — ESLint (Flat Config, Node.js 22)
+2. **Test** — Jest unit tests
+3. **Build** — Vercel auto-redeploys frontend; Render auto-redeploys backend
 
 ---
 
 ## 📜 License
-Internal Internship Project - Team Threadline.
+
+Internal Project — Team Threadline.
