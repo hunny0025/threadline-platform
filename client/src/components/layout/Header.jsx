@@ -229,9 +229,6 @@ export function Header() {
                 )}
               </button>
 
-                )}
-              </button>
-
               {/* User Profile / Sign In */}
               {user ? (
                 <div className="flex items-center gap-3 ml-2 lg:ml-4">
