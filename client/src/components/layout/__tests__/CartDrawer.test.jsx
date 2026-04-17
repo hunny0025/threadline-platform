@@ -1,4 +1,4 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { BrowserRouter } from 'react-router-dom';
 import { CartDrawer } from '../CartDrawer';
@@ -50,18 +50,22 @@ describe('CartDrawer', () => {
     expect(screen.getByText('$123.00')).toBeInTheDocument();
   });
 
-  it('calls updateQuantity on plus/minus click', () => {
+  it('calls updateQuantity on plus/minus click', async () => {
     const updateSpy = vi.fn();
     renderWithRouter(<CartDrawer isOpen={true} onClose={vi.fn()} cartItems={mockItems} updateQuantity={updateSpy} removeItem={vi.fn()} />);
     
     const incBtn = screen.getByRole('button', { name: /increase quantity/i });
-    fireEvent.click(incBtn);
+    await act(async () => {
+      fireEvent.click(incBtn);
+    });
     expect(updateSpy).toHaveBeenCalledWith('v_1', 3);
     
     updateSpy.mockClear();
     
     const decBtn = screen.getByRole('button', { name: /decrease quantity/i });
-    fireEvent.click(decBtn);
+    await act(async () => {
+      fireEvent.click(decBtn);
+    });
     expect(updateSpy).toHaveBeenCalledWith('v_1', 1);
   });
 
